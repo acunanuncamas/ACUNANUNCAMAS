@@ -171,13 +171,24 @@ const apiBase = 'https://mafia-tacna-api.acunanuncamas.workers.dev/api/counter';
 let alreadyVoted = false;
 let isSubmitting = false;
 let pressTimeout;
+let participationMessageTimeout;
+const buttonLabel = button.querySelector('span');
+const defaultButtonLabel = buttonLabel.textContent;
 // Keep the existing visual feedback, even after this IP has participated.
 button.addEventListener('click', () => {
   window.clearTimeout(pressTimeout);
   button.classList.add('is-pressed');
   pressTimeout = window.setTimeout(() => button.classList.remove('is-pressed'), 240);
+  submitParticipation();
 });
 
+function showAlreadyVotedMessage() {
+  window.clearTimeout(participationMessageTimeout);
+  buttonLabel.textContent = 'YA TE SUMASTE ✓';
+  participationMessageTimeout = window.setTimeout(() => {
+    buttonLabel.textContent = defaultButtonLabel;
+  }, 1800);
+}
 function updateCounter(value) {
   // Reject empty values, booleans and malformed responses instead of showing zero.
   const isNumeric = typeof value === 'number' ||
@@ -229,12 +240,19 @@ async function loadCounterData() {
 }
 
 async function submitParticipation() {
-  if (alreadyVoted || isSubmitting) return;
+  if (alreadyVoted) {
+    showAlreadyVotedMessage();
+    return;
+  }
+  if (isSubmitting) return;
   isSubmitting = true;
   try {
     // Wait for both initial reads, avoiding a late GET overwriting the POST result.
     await initialCounterLoad;
-    if (alreadyVoted) return;
+    if (alreadyVoted) {
+      showAlreadyVotedMessage();
+      return;
+    }
     const data = await requestCounterApi('/increment', { method: 'POST' });
     if (data.success !== true && data.alreadyVoted !== true) {
       throw new Error('Participation was not accepted by the API');
@@ -242,6 +260,7 @@ async function submitParticipation() {
     // Cloudflare is authoritative; never increment locally or persist IP status.
     alreadyVoted = true;
     updateCounter(data.value);
+    if (data.alreadyVoted === true) showAlreadyVotedMessage();
   } catch (error) {
     console.error('Unable to submit participation:', error);
   } finally {
@@ -250,4 +269,3 @@ async function submitParticipation() {
 }
 
 const initialCounterLoad = loadCounterData();
-button.addEventListener('click', submitParticipation);
