@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="La mafia de Acuña gobernará Tacna. ¿Esto es lo que quieres?">
+  <title>La mafia de Acuña gobernará Tacna · Yo digo no</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Staatliches&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="intro" id="intro" hidden aria-label="Introducción visual">
+    <video id="intro-video" autoplay muted playsinline preload="auto" aria-hidden="true" tabindex="-1">
+      <source src="img/sangre.webm" type="video/webm">
+      <source src="img/sangre.mp4" type="video/mp4">
+    </video>
+    <button class="skip-intro" id="skip-intro" type="button">Omitir intro <span aria-hidden="true">↗</span></button>
+  </div>
+
+  <div class="poster" id="poster" tabindex="-1">
+    <header class="masthead">
+      <!-- Edita aquí el título, manteniendo un span por línea. -->
+      <h1><span>LA MAFIA DE ACUÑA</span><span>GOBERNARÁ TACNA</span></h1>
+    </header>
+
+    <main>
+      <figure class="portrait">
+        <div class="portrait-glow" aria-hidden="true"></div>
+        <img src="img/acuna.png" alt="Retrato de César Acuña" fetchpriority="high" decoding="async">
+        <span class="registration registration-left" aria-hidden="true">+</span>
+        <span class="registration registration-right" aria-hidden="true">+</span>
+      </figure>
+
+      <div class="lower-content">
+      <section class="statement" aria-labelledby="question">
+        <h2 id="question">¿ESTO QUIERES PARA  <span>TACNA?</span></h2>
+        <button class="primary-button" id="say-no" type="button"><span>¡YO NO!</span></button>
+        <div class="counter-block">
+          <!-- Valor de muestra. Cada celda representa un dígito; no aumenta al pulsar. -->
+          <div class="counter" id="counter" role="img" aria-label="Contador de muestra: 004320" data-value="004320">
+            <span aria-hidden="true">0</span><span aria-hidden="true">0</span><span aria-hidden="true">4</span><span aria-hidden="true">3</span><span aria-hidden="true">2</span><span aria-hidden="true">0</span>
+          </div>
+          <p class="counter-caption">TU VOTO CONTIRBUYE CON UNA TACNA SIN MAFIAS</p>
+        </div>
+      </section>
+
+
+    <nav class="bottom-nav" aria-label="Navegación principal">
+      <a href="#"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M7 5h18v23H7zM11 10h10M11 14h10M17 19h4M17 23h4M11 19h3v4h-3z"/></svg><span>NOTICIAS</span></a>
+      <a href="#"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4 7h24v19H4zM4 23l8-8 6 6 4-4 6 6"/><circle cx="22" cy="12" r="2"/></svg><span class="nav-label">GALERÍA<br>DEL HORROR</span></a>
+      <a href="#"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="16" cy="16" r="12"/><g fill="currentColor" stroke="none"><circle cx="10" cy="16" r="1.5"/><circle cx="16" cy="16" r="1.5"/><circle cx="22" cy="16" r="1.5"/></g></svg><span>MÁS</span></a>
+    </nav>
+    <footer><span class="footer-mark" aria-hidden="true">×</span><p>SITIO DESARROLLADO POR <span>VERDADEROS TACNEÑOS</span></p><span class="footer-mark" aria-hidden="true">×</span></footer>
+      </div>
+    </main>
+  </div>
+  <button class="audio-toggle" id="audio-toggle" type="button" aria-label="Silenciar audio" aria-pressed="false" hidden>
+    <svg class="audio-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4 10v4h3l4 3V7l-4 3H4Z" fill="currentColor" stroke="none"/>
+      <path class="audio-wave" d="M15 9.5a4 4 0 0 1 0 5M17.5 7a7.5 7.5 0 0 1 0 10"/>
+    </svg>
+  </button>
+</body>
+</html>
