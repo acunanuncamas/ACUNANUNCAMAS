@@ -247,7 +247,7 @@ footer span:not(.footer-mark) { color: #bdb5ab; }
   .skip-intro:hover { border-color: var(--red); }
 }
 @media (min-width: 600px) {
-  .intro video { height: min(102dvh, 102svh); }
+  .intro video { height: min(110dvh, 110svh); }
   .poster { padding: 28px 42px 20px; }
   .portrait { margin: -58px -14px -28px; }
   .portrait img { max-height: 440px; max-width: 540px; }
