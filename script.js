@@ -166,26 +166,88 @@ reducedMotion.addEventListener('change', (event) => {
 });
 
 const button = document.querySelector('#say-no');
+const counter = document.querySelector('#counter');
+const apiBase = 'https://mafia-tacna-api.acunanuncamas.workers.dev/api/counter';
+let alreadyVoted = false;
+let isSubmitting = false;
 let pressTimeout;
+// Keep the existing visual feedback, even after this IP has participated.
 button.addEventListener('click', () => {
   window.clearTimeout(pressTimeout);
   button.classList.add('is-pressed');
   pressTimeout = window.setTimeout(() => button.classList.remove('is-pressed'), 240);
 });
 
-// Future API integration can call renderCounter(value); currently entirely static.
-function renderCounter(value) {
-  const digits = String(value);
-  if (!/^\d{1,6}$/.test(digits)) return;
-  const formatted = digits.padStart(6, '0');
-  const counter = document.querySelector('#counter');
+function updateCounter(value) {
+  // Reject empty values, booleans and malformed responses instead of showing zero.
+  const isNumeric = typeof value === 'number' ||
+    (typeof value === 'string' && /^\d+$/.test(value));
+  const numericValue = isNumeric ? Number(value) : NaN;
+  const cells = counter.querySelectorAll('span');
+  if (!Number.isSafeInteger(numericValue) || numericValue < 0 ||
+      numericValue > 999999 || cells.length !== 6) {
+    console.error('Invalid counter value or counter markup:', value);
+    return false;
+  }
+  const formatted = String(numericValue).padStart(6, '0');
+  cells.forEach((cell, index) => { cell.textContent = formatted[index]; });
   counter.dataset.value = formatted;
-  counter.setAttribute('aria-label', `Contador de muestra: ${formatted}`);
-  const cells = [...formatted].map((digit) => {
-    const cell = document.createElement('span');
-    cell.textContent = digit;
-    cell.setAttribute('aria-hidden', 'true');
-    return cell;
-  });
-  counter.replaceChildren(...cells);
+  counter.setAttribute('aria-label', `Participaciones: ${formatted}`);
+  return true;
 }
+
+async function requestCounterApi(path = '', options = {}) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch(`${apiBase}${path}`, {
+      ...options,
+      cache: 'no-store',
+      signal: controller.signal
+    });
+    if (!response.ok) throw new Error(`Counter API request failed: ${response.status}`);
+    return await response.json();
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
+async function loadCounterData() {
+  // Independent requests: a status failure must not hide a valid counter response.
+  const counterRequest = requestCounterApi()
+    .then((data) => { updateCounter(data.value); })
+    .catch((error) => { console.error('Unable to load counter:', error); });
+  const statusRequest = requestCounterApi('/status')
+    .then((data) => {
+      if (typeof data.alreadyVoted !== 'boolean') {
+        throw new Error('Invalid participation status response');
+      }
+      alreadyVoted = alreadyVoted || data.alreadyVoted;
+    })
+    .catch((error) => { console.error('Unable to load participation status:', error); });
+  await Promise.all([counterRequest, statusRequest]);
+}
+
+async function submitParticipation() {
+  if (alreadyVoted || isSubmitting) return;
+  isSubmitting = true;
+  try {
+    // Wait for both initial reads, avoiding a late GET overwriting the POST result.
+    await initialCounterLoad;
+    if (alreadyVoted) return;
+    const data = await requestCounterApi('/increment', { method: 'POST' });
+    if (data.success !== true && data.alreadyVoted !== true) {
+      throw new Error('Participation was not accepted by the API');
+    }
+    // Cloudflare is authoritative; never increment locally or persist IP status.
+    alreadyVoted = true;
+    updateCounter(data.value);
+  } catch (error) {
+    console.error('Unable to submit participation:', error);
+  } finally {
+    isSubmitting = false;
+  }
+}
+
+const initialCounterLoad = loadCounterData();
+button.addEventListener('click', submitParticipation);
