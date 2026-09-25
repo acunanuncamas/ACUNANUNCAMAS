@@ -174,7 +174,7 @@ let pressTimeout;
 let buttonSequenceActive = false;
 const buttonLabel = button.querySelector('span');
 const defaultButtonLabel = buttonLabel.textContent;
-const buttonTiming = Object.freeze({ fade: 200, typing: 1350, signal: 240, hold: 2000, reset: 180 });
+const buttonTiming = Object.freeze({ fade: 200, typing: 1350, signal: 240, suspense: 2000 });
 
 // One click listener: retain the physical press and coordinate only the visuals.
 button.addEventListener('click', () => {
@@ -218,27 +218,31 @@ async function typeRegistrationMessage(signal) {
   }
 }
 
-async function changeButtonSignal(confirmed, signal) {
-  button.dataset.phase = confirmed ? 'signal' : 'reset';
-  const duration = reducedMotion.matches ? 0 : (confirmed ? buttonTiming.signal : buttonTiming.reset);
+async function changeButtonSignal(signal) {
+  button.dataset.phase = 'signal';
+  const duration = reducedMotion.matches ? 0 : buttonTiming.signal;
   await waitForButtonPhase(duration / 2, signal);
   // Abrupt color switch hidden inside the interference, never a color fade.
-  button.classList.toggle('is-confirmed', confirmed);
+  button.classList.add('is-confirmed');
   await waitForButtonPhase(duration / 2, signal);
 }
 
-async function showAlreadyVotedMessage(signal) {
-  await changeButtonSignal(true, signal);
+function keepParticipationConfirmed() {
+  button.classList.add('is-sequencing', 'is-confirmed');
   button.dataset.phase = 'confirmed';
   button.setAttribute('aria-busy', 'false');
   button.setAttribute('aria-label', 'Ya te sumaste');
   buttonLabel.textContent = 'YA TE SUMASTE ✓';
-  await waitForButtonPhase(buttonTiming.hold, signal);
-  await changeButtonSignal(false, signal);
 }
 
+async function showAlreadyVotedMessage(signal) {
+  // Two additional seconds on red before the confirmation glitch.
+  await waitForButtonPhase(buttonTiming.suspense, signal);
+  await changeButtonSignal(signal);
+  keepParticipationConfirmed();
+}
 async function runButtonSequence() {
-  if (buttonSequenceActive) return;
+  if (buttonSequenceActive || (alreadyVoted && button.dataset.phase === 'confirmed')) return;
   buttonSequenceActive = true;
   const controller = new AbortController();
   const originalAriaLabel = button.getAttribute('aria-label');
@@ -259,12 +263,15 @@ async function runButtonSequence() {
     if (error.name !== 'AbortError') console.error('Unable to animate participation:', error);
   } finally {
     controller.abort();
-    buttonLabel.textContent = defaultButtonLabel;
-    button.classList.remove('is-sequencing', 'is-confirmed');
-    delete button.dataset.phase;
-    button.removeAttribute('aria-busy');
-    if (originalAriaLabel === null) button.removeAttribute('aria-label');
-    else button.setAttribute('aria-label', originalAriaLabel);
+    // Only failures return to the original button; valid confirmations persist.
+    if (button.dataset.phase !== 'confirmed') {
+      buttonLabel.textContent = defaultButtonLabel;
+      button.classList.remove('is-sequencing', 'is-confirmed');
+      delete button.dataset.phase;
+      button.removeAttribute('aria-busy');
+      if (originalAriaLabel === null) button.removeAttribute('aria-label');
+      else button.setAttribute('aria-label', originalAriaLabel);
+    }
     buttonSequenceActive = false;
   }
 }
@@ -313,6 +320,7 @@ async function loadCounterData() {
         throw new Error('Invalid participation status response');
       }
       alreadyVoted = alreadyVoted || data.alreadyVoted;
+      if (alreadyVoted && !buttonSequenceActive) keepParticipationConfirmed();
     })
     .catch((error) => { console.error('Unable to load participation status:', error); });
   await Promise.all([counterRequest, statusRequest]);
