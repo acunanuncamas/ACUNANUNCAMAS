@@ -332,6 +332,7 @@ body.vhs-glitch-active :is(h1, h2, .primary-button) { text-shadow: 2px 0 #d80b1b
   .primary-button:is([data-phase="signal"], [data-phase="reset"]) > span::before { display: none; }
   .primary-button:is([data-phase="signal"], [data-phase="reset"])::after { filter: none; }
 }
+.test-mode-badge:not([hidden]) { display: block; width: max-content; margin: 6px auto 0; padding: 2px 5px; border: 1px solid #6b655e; color: #aaa39b; font-size: 9px; letter-spacing: .08em; }
 .counter-block { margin: 12px auto 0; }
 .counter { display: flex; justify-content: center; gap: 4px; }
 .counter span { position: relative; display: grid; place-items: center; width: clamp(29px, 8.7vw, 39px); height: clamp(39px, 11vw, 48px); border: 1px solid #7c786d; border-radius: 2px; background: linear-gradient(#c0bdb4, #eee9dc 48%, #77736b 49%, #ddd8cb 52%, #c9c5b9); color: #171717; box-shadow: inset 0 0 6px #0005, 0 2px #292621; font: 400 clamp(27px, 7.8vw, 35px)/1 var(--typewriter); padding-top: 5px; }

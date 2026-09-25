@@ -168,6 +168,9 @@ reducedMotion.addEventListener('change', (event) => {
 const button = document.querySelector('#say-no');
 const counter = document.querySelector('#counter');
 const apiBase = 'https://mafia-tacna-api.acunanuncamas.workers.dev/api/counter';
+const TEST_MODE = new URLSearchParams(window.location.search).get('test') === '1';
+if (TEST_MODE) document.querySelector('#test-mode-badge').hidden = false;
+let testCounterValue = null;
 let alreadyVoted = false;
 let isSubmitting = false;
 let pressTimeout;
@@ -242,7 +245,14 @@ async function showAlreadyVotedMessage(signal) {
   keepParticipationConfirmed();
 }
 async function runButtonSequence() {
-  if (buttonSequenceActive || (alreadyVoted && button.dataset.phase === 'confirmed')) return;
+  if (buttonSequenceActive || (!TEST_MODE && alreadyVoted && button.dataset.phase === 'confirmed')) return;
+  if (TEST_MODE && button.dataset.phase === 'confirmed') {
+    button.classList.remove('is-sequencing', 'is-confirmed');
+    delete button.dataset.phase;
+    button.removeAttribute('aria-busy');
+    button.removeAttribute('aria-label');
+    buttonLabel.textContent = defaultButtonLabel;
+  }
   buttonSequenceActive = true;
   const controller = new AbortController();
   const originalAriaLabel = button.getAttribute('aria-label');
@@ -312,9 +322,11 @@ async function requestCounterApi(path = '', options = {}) {
 async function loadCounterData() {
   // Independent requests: a status failure must not hide a valid counter response.
   const counterRequest = requestCounterApi()
-    .then((data) => { updateCounter(data.value); })
+    .then((data) => {
+      if (updateCounter(data.value) && TEST_MODE) testCounterValue = Number(data.value);
+    })
     .catch((error) => { console.error('Unable to load counter:', error); });
-  const statusRequest = requestCounterApi('/status')
+  const statusRequest = TEST_MODE ? Promise.resolve() : requestCounterApi('/status')
     .then((data) => {
       if (typeof data.alreadyVoted !== 'boolean') {
         throw new Error('Invalid participation status response');
@@ -327,6 +339,17 @@ async function loadCounterData() {
 }
 
 async function submitParticipation() {
+  if (TEST_MODE) {
+    await initialCounterLoad;
+    if (testCounterValue === null) {
+      console.error('Unable to simulate participation: real counter is unavailable');
+      return false;
+    }
+    const simulatedValue = testCounterValue + 1;
+    if (!updateCounter(simulatedValue)) return false;
+    testCounterValue = simulatedValue;
+    return true;
+  }
   if (alreadyVoted) return true;
   if (isSubmitting) return false;
   isSubmitting = true;
