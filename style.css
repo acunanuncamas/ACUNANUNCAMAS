@@ -278,6 +278,9 @@ body.vhs-glitch-active :is(h1, h2, .primary-button) { text-shadow: 2px 0 #d80b1b
   box-shadow: 0 0 13px 3px #80caff99, 0 0 27px 6px #0c40db66;
 }
 .primary-button.is-confirmed { filter: drop-shadow(0 4px 0 #103970); }
+.primary-button.is-sequencing[data-phase="signal"] > span {
+  font-size: clamp(16px, 4.5vw, 21px);
+}
 .primary-button.is-sequencing[data-phase="confirmed"] > span {
   font-size: clamp(16px, 4.5vw, 21px);
   animation: button-confirmation-impact .16s ease-out both;
@@ -336,6 +339,38 @@ body.vhs-glitch-active :is(h1, h2, .primary-button) { text-shadow: 2px 0 #d80b1b
 .counter-block { margin: 12px auto 0; }
 .counter { display: flex; justify-content: center; gap: 4px; }
 .counter span { position: relative; display: grid; place-items: center; width: clamp(29px, 8.7vw, 39px); height: clamp(39px, 11vw, 48px); border: 1px solid #7c786d; border-radius: 2px; background: linear-gradient(#c0bdb4, #eee9dc 48%, #77736b 49%, #ddd8cb 52%, #c9c5b9); color: #171717; box-shadow: inset 0 0 6px #0005, 0 2px #292621; font: 400 clamp(27px, 7.8vw, 35px)/1 var(--typewriter); padding-top: 5px; }
+/* Flip only the paper digits that change, starting at the rightmost cell. */
+.counter span.is-flipping { color: transparent; perspective: 220px; }
+.counter span.is-flipping::before,
+.counter span.is-flipping::after {
+  position: absolute; inset: -1px; display: grid; place-items: center; padding-top: 5px;
+  border: 1px solid #7c786d; border-radius: 2px;
+  background: linear-gradient(#c0bdb4, #eee9dc 48%, #77736b 49%, #ddd8cb 52%, #c9c5b9);
+  color: #171717; box-shadow: inset 0 0 6px #0005, 0 2px #292621;
+  backface-visibility: hidden;
+}
+.counter span.is-flipping::before {
+  content: attr(data-flip-from); transform-origin: center top;
+  animation: counter-flip-out 460ms ease-in var(--flip-delay) both;
+}
+.counter span.is-flipping::after {
+  content: attr(data-flip-to); transform-origin: center bottom;
+  animation: counter-flip-in 460ms ease-out var(--flip-delay) both;
+}
+@keyframes counter-flip-out {
+  0%, 4% { opacity: 1; transform: rotateX(0); }
+  49% { opacity: 1; transform: rotateX(-90deg); filter: blur(.4px); }
+  50%, 100% { opacity: 0; transform: rotateX(-90deg); }
+}
+@keyframes counter-flip-in {
+  0%, 49% { opacity: 0; transform: rotateX(90deg); }
+  50% { opacity: 1; transform: rotateX(90deg); filter: blur(.4px); }
+  100% { opacity: 1; transform: rotateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .counter span.is-flipping::before,
+  .counter span.is-flipping::after { animation: none; }
+}
 .counter span:nth-child(3n) { transform: rotate(.7deg) translateY(1px); }
 .counter span:nth-child(4) { transform: rotate(-1deg); }
 .counter-caption { margin: 8px 0 0; font-size: 8px; letter-spacing: .18em; color: #928b84; }

@@ -221,14 +221,6 @@ async function typeRegistrationMessage(signal) {
   }
 }
 
-async function changeButtonSignal(signal) {
-  button.dataset.phase = 'signal';
-  const duration = reducedMotion.matches ? 0 : buttonTiming.signal;
-  await waitForButtonPhase(duration / 2, signal);
-  // Abrupt color switch hidden inside the interference, never a color fade.
-  button.classList.add('is-confirmed');
-  await waitForButtonPhase(duration / 2, signal);
-}
 
 function keepParticipationConfirmed() {
   button.classList.add('is-sequencing', 'is-confirmed');
@@ -238,11 +230,21 @@ function keepParticipationConfirmed() {
   buttonLabel.textContent = 'YA TE SUMASTE ✓';
 }
 
-async function showAlreadyVotedMessage(signal) {
-  // Two additional seconds on red before the confirmation glitch.
+async function showAlreadyVotedMessage(signal, result) {
+  // Hold the red registration state, then reveal the blue message and flip together.
   await waitForButtonPhase(buttonTiming.suspense, signal);
-  await changeButtonSignal(signal);
-  keepParticipationConfirmed();
+  button.dataset.phase = 'signal';
+  button.classList.add('is-confirmed');
+  button.setAttribute('aria-label', 'Ya te sumaste');
+  buttonLabel.textContent = 'YA TE SUMASTE ✓';
+  const signalPhase = waitForButtonPhase(
+    reducedMotion.matches ? 0 : buttonTiming.signal, signal
+  ).then(keepParticipationConfirmed);
+  const counterPhase = result.animateCounter
+    ? animateCounterTo(result.value)
+    : Promise.resolve(false);
+  const [, counterUpdated] = await Promise.all([signalPhase, counterPhase]);
+  if (TEST_MODE && counterUpdated) testCounterValue = result.value;
 }
 async function runButtonSequence() {
   if (buttonSequenceActive || (!TEST_MODE && alreadyVoted && button.dataset.phase === 'confirmed')) return;
@@ -259,16 +261,17 @@ async function runButtonSequence() {
   button.classList.add('is-sequencing');
   button.dataset.phase = 'fading';
   button.setAttribute('aria-busy', 'true');
-  // The real request begins immediately; no animation delays the counter update.
-  const participation = submitParticipation().then((confirmed) => {
-    if (!confirmed) controller.abort();
-    return confirmed;
+  // Start the request now, but reveal its counter value only at confirmation.
+  const participation = submitParticipation().then((result) => {
+    if (!result.confirmed) controller.abort();
+    return result;
   });
   try {
     await waitForButtonPhase(reducedMotion.matches ? 0 : buttonTiming.fade, controller.signal);
     await typeRegistrationMessage(controller.signal);
     // Stay red until BOTH the typing and the authoritative result are ready.
-    if (await participation) await showAlreadyVotedMessage(controller.signal);
+    const result = await participation;
+    if (result.confirmed) await showAlreadyVotedMessage(controller.signal, result);
   } catch (error) {
     if (error.name !== 'AbortError') console.error('Unable to animate participation:', error);
   } finally {
@@ -285,22 +288,56 @@ async function runButtonSequence() {
     buttonSequenceActive = false;
   }
 }
-function updateCounter(value) {
+function formatCounterValue(value) {
   // Reject empty values, booleans and malformed responses instead of showing zero.
   const isNumeric = typeof value === 'number' ||
     (typeof value === 'string' && /^\d+$/.test(value));
   const numericValue = isNumeric ? Number(value) : NaN;
-  const cells = counter.querySelectorAll('span');
   if (!Number.isSafeInteger(numericValue) || numericValue < 0 ||
-      numericValue > 999999 || cells.length !== 6) {
+      numericValue > 999999 || counter.querySelectorAll('span').length !== 6) {
     console.error('Invalid counter value or counter markup:', value);
-    return false;
+    return null;
   }
-  const formatted = String(numericValue).padStart(6, '0');
-  cells.forEach((cell, index) => { cell.textContent = formatted[index]; });
+  return String(numericValue).padStart(6, '0');
+}
+
+function updateCounter(value) {
+  const formatted = formatCounterValue(value);
+  if (formatted === null) return false;
+  counter.querySelectorAll('span').forEach((cell, index) => {
+    cell.textContent = formatted[index];
+  });
   counter.dataset.value = formatted;
   counter.setAttribute('aria-label', `Participaciones: ${formatted}`);
   return true;
+}
+
+async function animateCounterTo(value) {
+  const formatted = formatCounterValue(value);
+  if (formatted === null) return false;
+  const previous = counter.dataset.value;
+  if (reducedMotion.matches || !/^\d{6}$/.test(previous) ||
+      Number(formatted) <= Number(previous)) return updateCounter(value);
+
+  const cells = counter.querySelectorAll('span');
+  let changed = 0;
+  for (let index = 5; index >= 0; index--) {
+    if (previous[index] === formatted[index]) continue;
+    const cell = cells[index];
+    cell.dataset.flipFrom = previous[index];
+    cell.dataset.flipTo = formatted[index];
+    cell.style.setProperty('--flip-delay', `${changed * 40}ms`);
+    cell.classList.add('is-flipping');
+    changed++;
+  }
+  await new Promise((resolve) => window.setTimeout(resolve, 460 + (changed - 1) * 40));
+  cells.forEach((cell) => {
+    cell.classList.remove('is-flipping');
+    delete cell.dataset.flipFrom;
+    delete cell.dataset.flipTo;
+    cell.style.removeProperty('--flip-delay');
+  });
+  return updateCounter(value);
 }
 
 async function requestCounterApi(path = '', options = {}) {
@@ -343,31 +380,36 @@ async function submitParticipation() {
     await initialCounterLoad;
     if (testCounterValue === null) {
       console.error('Unable to simulate participation: real counter is unavailable');
-      return false;
+      return { confirmed: false };
     }
     const simulatedValue = testCounterValue + 1;
-    if (!updateCounter(simulatedValue)) return false;
-    testCounterValue = simulatedValue;
-    return true;
+    if (formatCounterValue(simulatedValue) === null) return { confirmed: false };
+    return { confirmed: true, value: simulatedValue, animateCounter: true };
   }
-  if (alreadyVoted) return true;
-  if (isSubmitting) return false;
+  if (alreadyVoted) return { confirmed: true, animateCounter: false };
+  if (isSubmitting) return { confirmed: false };
   isSubmitting = true;
   try {
     // Wait for both initial reads, avoiding a late GET overwriting the POST result.
     await initialCounterLoad;
-    if (alreadyVoted) return true;
+    if (alreadyVoted) return { confirmed: true, animateCounter: false };
     const data = await requestCounterApi('/increment', { method: 'POST' });
     if (data.success !== true && data.alreadyVoted !== true) {
       throw new Error('Participation was not accepted by the API');
     }
-    // Cloudflare is authoritative; never increment locally or persist IP status.
-    if (!updateCounter(data.value)) throw new Error('Invalid participation counter response');
+    if (formatCounterValue(data.value) === null) {
+      throw new Error('Invalid participation counter response');
+    }
     alreadyVoted = true;
-    return true;
+    // Only a newly accepted vote reveals and animates the authoritative D1 value.
+    return {
+      confirmed: true,
+      value: data.value,
+      animateCounter: data.success === true
+    };
   } catch (error) {
     console.error('Unable to submit participation:', error);
-    return false;
+    return { confirmed: false };
   } finally {
     isSubmitting = false;
   }
