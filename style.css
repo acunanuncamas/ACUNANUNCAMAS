@@ -181,7 +181,7 @@ h2 span { color: var(--red); }
 .primary-button span { position: relative; z-index: 1; min-width: 0; overflow-wrap: anywhere; }
 .primary-button .button-hand {
   position: relative; z-index: 1; display: block; flex: 0 0 auto;
-  width: clamp(32px, 9vw, 40px); height: auto; aspect-ratio: 250 / 335;
+  width: clamp(32px, 9vw, 40px); max-width: 40px; height: auto; max-height: 54px; aspect-ratio: 250 / 335;
   object-fit: contain; pointer-events: none; user-select: none;
   filter: drop-shadow(0 2px 2px #180106b3);
 }
