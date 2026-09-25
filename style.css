@@ -143,6 +143,8 @@ h1::after { content: ''; position: absolute; inset: 0; pointer-events: none; opa
 h2 { margin: 0 auto 8px; font-size: clamp(18px, 5.8vw, 29px); font-weight: 400; line-height: 1.15; letter-spacing: -.055em; text-shadow: 1px 0 #d80b1b55, -1px 0 #0c40db55; }
 h2 span { color: var(--red); }
 .primary-button {
+  --glitch-shift: 3px;
+  --glitch-return: -2px;
   position: relative; display: flex; align-items: center; justify-content: center;
   width: min(78%, 280px); min-height: 64px; margin-inline: auto; padding: 5px 16px; text-align: center;
   border: 0; border-radius: 2px; isolation: isolate;
@@ -168,20 +170,64 @@ h2 span { color: var(--red); }
   box-shadow: 0 0 13px 3px #f0173b99, 0 0 27px 6px #c408234d;
 }
 .page-revealed .primary-button::after {
-  animation: button-glow 2.4s ease-in-out 3.3s infinite;
+  animation: button-glow 2.4s ease-in-out 3.3s infinite,
+    button-glitch-glow 7.8s steps(1, end) 3.3s infinite;
 }
 @keyframes button-glow {
   0%, 100% { opacity: .45; transform: scale(.98); }
   50% { opacity: 1; transform: scale(1.025); }
 }
 .primary-button span { position: relative; z-index: 1; }
-/* A gentle, recurring invitation to tap; starts after the entrance sequence. */
+/* Three different 195ms bursts, 2.5-2.7s apart; no duplicated text or JS. */
 .page-revealed .primary-button:not(:active):not(.is-pressed) {
-  animation: button-pulse 2.6s ease-in-out 3.3s infinite;
+  animation: button-microglitch 7.8s steps(1, end) 3.3s infinite;
 }
-@keyframes button-pulse {
-  0%, 65%, 100% { transform: scale(1); }
-  32% { transform: scale(1.035); }
+.page-revealed .primary-button span {
+  animation: button-text-glitch 7.8s steps(1, end) 3.3s infinite;
+}
+.page-revealed .primary-button::before {
+  animation: button-edge-glitch 7.8s steps(1, end) 3.3s infinite;
+}
+.primary-button:focus-visible { --glitch-shift: 4px; --glitch-return: -3px; }
+/* Leave the existing pressed transform in full control during a tap. */
+.primary-button:active span, .primary-button.is-pressed span,
+.primary-button:active::before, .primary-button.is-pressed::before,
+.primary-button:active::after, .primary-button.is-pressed::after {
+  animation: none;
+}
+@keyframes button-microglitch {
+  0%, 31.5%, 64.5%, 99.5%, 100% { transform: translateX(0); }
+  29% { transform: translateX(var(--glitch-shift)); }
+  29.7% { transform: translateX(var(--glitch-return)); }
+  30.8% { transform: translateX(1px); }
+  62% { transform: translateX(var(--glitch-return)); }
+  63.2% { transform: translateX(var(--glitch-shift)); }
+  64% { transform: translateX(-1px); }
+  97% { transform: translateX(2px); }
+  97.5% { transform: translateX(var(--glitch-return)); }
+  98.6% { transform: translateX(var(--glitch-shift)); }
+}
+@keyframes button-text-glitch {
+  0%, 31.5%, 64.5%, 99.5%, 100% { text-shadow: inherit; }
+  29%, 63.2%, 97.5% {
+    text-shadow: var(--glitch-shift) 0 #ff1744, var(--glitch-return) 0 #59e8ff, 0 2px 1px #700512;
+  }
+  29.7%, 62%, 98.6% {
+    text-shadow: var(--glitch-return) 1px #ff1744, var(--glitch-shift) -1px #59e8ff, 0 2px 1px #700512;
+  }
+  30.8%, 64%, 97% { text-shadow: -1px 0 #ff1744, 2px 0 #59e8ff; }
+}
+@keyframes button-edge-glitch {
+  0%, 31.5%, 64.5%, 99.5%, 100% { transform: none; }
+  29%, 63.2%, 97.5% { transform: translateX(-1px) skewX(1deg); }
+  29.7%, 62%, 98.6% { transform: translateX(1px) skewX(-1.2deg); }
+  30.8%, 64%, 97% { transform: translateX(-1px); }
+}
+@keyframes button-glitch-glow {
+  0%, 31.5%, 64.5%, 99.5%, 100% { filter: brightness(1); }
+  29%, 63.2%, 97.5% { filter: brightness(1.8); }
+  29.7%, 62%, 98.6% { filter: brightness(1.35); }
+  30.8%, 64%, 97% { filter: brightness(1.6); }
 }
 @keyframes vhs-text-chroma {
   0%, 82%, 100% { text-shadow: 1px 1px #490610, -1px 0 #a81424; }
@@ -240,7 +286,7 @@ footer span:not(.footer-mark) { color: #bdb5ab; }
   to { opacity: 1; visibility: visible; transform: scale(1); }
 }
 @media (hover: hover) {
-  .primary-button:hover:not(:active):not(.is-pressed) { filter: brightness(1.12) drop-shadow(0 4px 0 #62030d); }
+  .primary-button:hover:not(:active):not(.is-pressed) { --glitch-shift: 4px; --glitch-return: -3px; filter: brightness(1.12) drop-shadow(0 4px 0 #62030d); }
 
   .bottom-nav a:hover { color: var(--red); }
   .bottom-nav a:nth-child(2):hover { color: #7393ff; }
