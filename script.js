@@ -171,23 +171,102 @@ const apiBase = 'https://mafia-tacna-api.acunanuncamas.workers.dev/api/counter';
 let alreadyVoted = false;
 let isSubmitting = false;
 let pressTimeout;
-let participationMessageTimeout;
+let buttonSequenceActive = false;
 const buttonLabel = button.querySelector('span');
 const defaultButtonLabel = buttonLabel.textContent;
-// Keep the existing visual feedback, even after this IP has participated.
+const buttonTiming = Object.freeze({ fade: 200, typing: 1350, signal: 240, hold: 2000, reset: 180 });
+
+// One click listener: retain the physical press and coordinate only the visuals.
 button.addEventListener('click', () => {
   window.clearTimeout(pressTimeout);
   button.classList.add('is-pressed');
   pressTimeout = window.setTimeout(() => button.classList.remove('is-pressed'), 240);
-  submitParticipation();
+  runButtonSequence();
 });
 
-function showAlreadyVotedMessage() {
-  window.clearTimeout(participationMessageTimeout);
+function waitForButtonPhase(duration, signal) {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new DOMException('Button sequence cancelled', 'AbortError'));
+      return;
+    }
+    const onAbort = () => {
+      window.clearTimeout(timer);
+      reject(new DOMException('Button sequence cancelled', 'AbortError'));
+    };
+    const timer = window.setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort);
+      resolve();
+    }, duration);
+    signal?.addEventListener('abort', onAbort, { once: true });
+  });
+}
+
+async function typeRegistrationMessage(signal) {
+  const message = 'REGISTRANDO TU RESPUESTA...';
+  button.dataset.phase = 'registering';
+  button.setAttribute('aria-label', 'Registrando tu respuesta');
+  buttonLabel.textContent = '';
+  if (reducedMotion.matches) {
+    buttonLabel.textContent = message;
+    await waitForButtonPhase(250, signal);
+    return;
+  }
+  for (let length = 1; length <= message.length; length++) {
+    buttonLabel.textContent = message.slice(0, length);
+    await waitForButtonPhase(buttonTiming.typing / message.length, signal);
+  }
+}
+
+async function changeButtonSignal(confirmed, signal) {
+  button.dataset.phase = confirmed ? 'signal' : 'reset';
+  const duration = reducedMotion.matches ? 0 : (confirmed ? buttonTiming.signal : buttonTiming.reset);
+  await waitForButtonPhase(duration / 2, signal);
+  // Abrupt color switch hidden inside the interference, never a color fade.
+  button.classList.toggle('is-confirmed', confirmed);
+  await waitForButtonPhase(duration / 2, signal);
+}
+
+async function showAlreadyVotedMessage(signal) {
+  await changeButtonSignal(true, signal);
+  button.dataset.phase = 'confirmed';
+  button.setAttribute('aria-busy', 'false');
+  button.setAttribute('aria-label', 'Ya te sumaste');
   buttonLabel.textContent = 'YA TE SUMASTE ✓';
-  participationMessageTimeout = window.setTimeout(() => {
+  await waitForButtonPhase(buttonTiming.hold, signal);
+  await changeButtonSignal(false, signal);
+}
+
+async function runButtonSequence() {
+  if (buttonSequenceActive) return;
+  buttonSequenceActive = true;
+  const controller = new AbortController();
+  const originalAriaLabel = button.getAttribute('aria-label');
+  button.classList.add('is-sequencing');
+  button.dataset.phase = 'fading';
+  button.setAttribute('aria-busy', 'true');
+  // The real request begins immediately; no animation delays the counter update.
+  const participation = submitParticipation().then((confirmed) => {
+    if (!confirmed) controller.abort();
+    return confirmed;
+  });
+  try {
+    await waitForButtonPhase(reducedMotion.matches ? 0 : buttonTiming.fade, controller.signal);
+    await typeRegistrationMessage(controller.signal);
+    // Stay red until BOTH the typing and the authoritative result are ready.
+    if (await participation) await showAlreadyVotedMessage(controller.signal);
+  } catch (error) {
+    if (error.name !== 'AbortError') console.error('Unable to animate participation:', error);
+  } finally {
+    controller.abort();
     buttonLabel.textContent = defaultButtonLabel;
-  }, 1800);
+    button.classList.remove('is-sequencing', 'is-confirmed');
+    delete button.dataset.phase;
+    button.removeAttribute('aria-busy');
+    if (originalAriaLabel === null) button.removeAttribute('aria-label');
+    else button.setAttribute('aria-label', originalAriaLabel);
+    buttonSequenceActive = false;
+  }
 }
 function updateCounter(value) {
   // Reject empty values, booleans and malformed responses instead of showing zero.
@@ -240,29 +319,24 @@ async function loadCounterData() {
 }
 
 async function submitParticipation() {
-  if (alreadyVoted) {
-    showAlreadyVotedMessage();
-    return;
-  }
-  if (isSubmitting) return;
+  if (alreadyVoted) return true;
+  if (isSubmitting) return false;
   isSubmitting = true;
   try {
     // Wait for both initial reads, avoiding a late GET overwriting the POST result.
     await initialCounterLoad;
-    if (alreadyVoted) {
-      showAlreadyVotedMessage();
-      return;
-    }
+    if (alreadyVoted) return true;
     const data = await requestCounterApi('/increment', { method: 'POST' });
     if (data.success !== true && data.alreadyVoted !== true) {
       throw new Error('Participation was not accepted by the API');
     }
     // Cloudflare is authoritative; never increment locally or persist IP status.
+    if (!updateCounter(data.value)) throw new Error('Invalid participation counter response');
     alreadyVoted = true;
-    updateCounter(data.value);
-    if (data.alreadyVoted === true) showAlreadyVotedMessage();
+    return true;
   } catch (error) {
     console.error('Unable to submit participation:', error);
+    return false;
   } finally {
     isSubmitting = false;
   }
