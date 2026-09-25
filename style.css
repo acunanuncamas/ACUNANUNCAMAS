@@ -145,6 +145,7 @@ h2 span { color: var(--red); }
 .primary-button {
   --glitch-shift: 3px;
   --glitch-return: -2px;
+  gap: 8px;
   position: relative; display: flex; align-items: center; justify-content: center;
   width: min(78%, 280px); min-height: 64px; margin-inline: auto; padding: 5px 16px; text-align: center;
   border: 0; border-radius: 2px; isolation: isolate;
@@ -177,7 +178,20 @@ h2 span { color: var(--red); }
   0%, 100% { opacity: .45; transform: scale(.98); }
   50% { opacity: 1; transform: scale(1.025); }
 }
-.primary-button span { position: relative; z-index: 1; }
+.primary-button span { position: relative; z-index: 1; min-width: 0; overflow-wrap: anywhere; }
+.primary-button .button-hand {
+  position: relative; z-index: 1; display: block; flex: 0 0 auto;
+  width: clamp(32px, 9vw, 40px); height: auto; aspect-ratio: 250 / 335;
+  object-fit: contain; pointer-events: none; user-select: none;
+  filter: drop-shadow(0 2px 2px #180106b3);
+}
+.page-revealed .primary-button .button-hand {
+  animation: button-hand-float 2.8s ease-in-out 3.3s infinite;
+}
+@keyframes button-hand-float {
+  0%, 100% { transform: translateY(1px) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(-4deg); }
+}
 /* Three different 195ms bursts, 2.5-2.7s apart; no duplicated text or JS. */
 .page-revealed .primary-button:not(:active):not(.is-pressed) {
   animation: button-microglitch 7.8s steps(1, end) 3.3s infinite;
