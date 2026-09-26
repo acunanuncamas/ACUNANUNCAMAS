@@ -12,6 +12,7 @@ const audioMuted = localStorage.getItem('audio-muted') === 'true';
 let activeAudio = audioIntro;
 let audioStarted = false;
 let audioBackgroundPaused = false;
+let galleryVideoAudioOpen = false;
 [audioIntro, audioMain, audioOutro].forEach((audio) => {
   audio.preload = 'auto';
   audio.volume = 0.35;
@@ -27,7 +28,7 @@ function startBackgroundAudio() {
   audioStarted = true;
   audioIntro.currentTime = 0;
   activeAudio = audioIntro;
-  if (document.hidden || audioBackgroundPaused) {
+  if (document.hidden || audioBackgroundPaused || galleryVideoAudioOpen) {
     audioBackgroundPaused = true;
     return;
   }
@@ -36,7 +37,7 @@ function startBackgroundAudio() {
 }
 function playAudioTrack(audio) {
   activeAudio = audio;
-  if (document.hidden || audioBackgroundPaused) {
+  if (document.hidden || audioBackgroundPaused || galleryVideoAudioOpen) {
     audioBackgroundPaused = true;
     return;
   }
@@ -49,7 +50,7 @@ function pauseBackgroundAudio() {
   [audioIntro, audioMain, audioOutro].forEach((audio) => audio.pause());
 }
 function resumeBackgroundAudio() {
-  if (document.hidden || !audioStarted || !audioBackgroundPaused) return;
+  if (document.hidden || galleryVideoAudioOpen || !audioStarted || !audioBackgroundPaused) return;
   audioBackgroundPaused = false;
   const playback = activeAudio.play();
   if (playback) playback.catch(() => {});
@@ -60,6 +61,11 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('pagehide', pauseBackgroundAudio);
 window.addEventListener('pageshow', resumeBackgroundAudio);
+document.addEventListener('gallery-video-audio', (event) => {
+  galleryVideoAudioOpen = event.detail.open;
+  if (galleryVideoAudioOpen) pauseBackgroundAudio();
+  else resumeBackgroundAudio();
+});
 
 function updateAudioToggle(muted) {
   audioToggle.classList.toggle('is-muted', muted);

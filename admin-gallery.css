@@ -27,3 +27,8 @@ dialog{max-width:440px;width:calc(100% - 32px);background:#171519;color:var(--pa
 dialog::backdrop{background:#000c}dialog p{overflow-wrap:anywhere}
 @media(max-width:599px){.admin-shell{padding:20px 12px}.panel{padding:16px}header{align-items:start;flex-wrap:wrap}header>a{font-size:13px}.section-title>span{display:none}.toolbar{flex-wrap:wrap}.toolbar>button{width:100%}.photo-grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
+.admin-media-tabs { display: flex; gap: 10px; margin: 16px 0; }
+.admin-media-tabs button { min-height: 44px; flex: 1; background: #17171b; color: #ddd; border: 1px solid #555; }
+.admin-media-tabs button[aria-pressed="true"] { background: #b80e23; color: #fff; border-color: #e03143; }
+.photo-card video { display: block; width: 100%; height: 220px; object-fit: contain; background: #000; border-radius: 3px; }

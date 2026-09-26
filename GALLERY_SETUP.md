@@ -28,3 +28,7 @@ Una vez publicado, el panel estará en `/admin-gallery.html` dentro del mismo si
 - La galería pública no recibe el token. Resuelve las URL relativas contra el Worker y utiliza la ruta de imagen por ID si no se proporciona `image_url`.
 
 Los archivos del panel son independientes: `admin-gallery.html`, `admin-gallery.css` y `admin-gallery.js`. No cargan el código de votación ni las animaciones de la página pública.
+
+
+## Videos
+El panel ahora incluye FOTOS y VIDEOS. Para instalar el soporte de videos en el Worker y D1, sigue VIDEOS_SETUP.md. Las rutas y el campo image de fotografías se mantienen.

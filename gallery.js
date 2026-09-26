@@ -170,6 +170,7 @@ function renderGalleryColumns() {
 }
 
 function syncGalleryMotion() {
+  document.dispatchEvent(new Event('gallery-view-change'));
   galleryView.classList.toggle('is-running',
     galleryActive && !galleryView.hidden && !galleryPhotosPanel.hidden && galleryColumns.classList.contains('is-entered') &&
     !galleryReducedMotion.matches && document.visibilityState !== 'hidden');
@@ -221,6 +222,7 @@ async function showHome() {
   gallerySwitching = true;
   closeGalleryLightbox();
   galleryActive = false;
+  document.dispatchEvent(new Event('gallery-view-change'));
   galleryView.classList.remove('is-visible', 'is-running');
   galleryColumns.classList.remove('is-entered');
   window.clearTimeout(galleryEntranceTimer);

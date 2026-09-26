@@ -25,9 +25,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Staatliches&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260926-gallery-tabs-5">
-  <script src="script.js?v=20260925-audio-visibility-2" defer></script>
-  <script src="gallery.js?v=20260926-gallery-tabs-6" defer></script>
+  <link rel="stylesheet" href="style.css?v=20260926-videos-1">
+  <script src="script.js?v=20260926-videos-1" defer></script>
+  <script src="gallery.js?v=20260926-videos-1" defer></script>
+  <script src="gallery-videos.js?v=1" defer></script>
   <meta name="gallery-api-endpoint" content="https://mafia-tacna-api.acunanuncamas.workers.dev/api/gallery">
 </head>
 <body>
@@ -99,6 +100,12 @@
       <figcaption id="gallery-lightbox-caption"></figcaption>
     </figure>
   </div>
+  <dialog class="gallery-video-dialog" id="gallery-video-dialog" aria-label="Video ampliado">
+    <button class="gallery-video-close" id="gallery-video-close" type="button" aria-label="Cerrar video">×</button>
+    <video id="gallery-video-player" controls playsinline preload="metadata"></video>
+    <p id="gallery-video-caption"></p>
+    <p id="gallery-video-status" role="status"></p>
+  </dialog>
   <button class="audio-toggle" id="audio-toggle" type="button" aria-label="Silenciar audio" aria-pressed="false" hidden>
     <svg class="audio-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M4 10v4h3l4 3V7l-4 3H4Z" fill="currentColor" stroke="none"/>

@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Administrar galería</title>
-<link rel="stylesheet" href="admin-gallery.css?v=1">
-<script src="admin-gallery.js?v=1" defer></script>
+<link rel="stylesheet" href="admin-gallery.css?v=2">
+<script src="admin-gallery.js?v=2" defer></script>
 </head>
 <body>
 <main class="admin-shell">
 <header><div><p class="eyebrow">ARCHIVO / ADMINISTRACIÓN</p><h1>Galería<span>.</span></h1></div><a href="index.html">Ver la web ↗</a></header>
 <p id="notice" role="status" aria-live="polite"></p>
 <section id="login-panel" class="panel">
-<h2>Acceso privado</h2><p>Introduce tu token de administrador para gestionar las fotografías.</p>
+<h2>Acceso privado</h2><p>Introduce tu token de administrador para gestionar las fotografías y los videos.</p>
 <form id="login-form">
 <label>Token de administrador<input id="admin-token" type="password" autocomplete="off" spellcheck="false" required></label>
 <label class="inline"><input id="remember-token" type="checkbox"> Mantener acceso en esta pestaña</label>
@@ -21,25 +21,26 @@
 </form>
 </section>
 <div id="workspace" hidden>
+<div class="admin-media-tabs" role="group" aria-label="Tipo de archivo"><button type="button" data-admin-media="photos" aria-pressed="true">FOTOS</button><button type="button" data-admin-media="videos" aria-pressed="false">VIDEOS</button></div>
 <div class="toolbar"><p>Sesión de administración activa</p><button id="logout" class="secondary" type="button">Cerrar sesión</button></div>
 <section class="panel">
-<div class="section-title"><h2>Subir fotografías</h2><span>01 / NUEVAS IMÁGENES</span></div>
+<div class="section-title"><h2 id="upload-heading">Subir fotografías</h2><span id="upload-kind">01 / NUEVAS IMÁGENES</span></div>
 <label id="drop-zone" class="drop-zone" tabindex="0">
-<strong>Arrastra tus fotografías aquí</strong><span>o pulsa para seleccionarlas · puedes elegir varias</span>
+<strong id="drop-heading">Arrastra tus fotografías aquí</strong><span id="drop-help">o pulsa para seleccionarlas · puedes elegir varias</span>
 <input id="file-input" type="file" accept="image/*" multiple>
 </label>
 <div id="queue" class="photo-grid"></div>
 <div class="toolbar"><p id="queue-summary">No hay archivos seleccionados.</p><button id="upload-all" type="button" disabled>Subir pendientes</button></div>
 </section>
 <section class="panel">
-<div class="section-title"><h2>Archivo de fotografías</h2><button id="refresh" class="secondary" type="button">Actualizar lista</button></div>
+<div class="section-title"><h2 id="list-heading">Archivo de fotografías</h2><button id="refresh" class="secondary" type="button">Actualizar lista</button></div>
 <p id="list-status" role="status"></p>
 <div id="photo-list" class="photo-grid"></div>
 </section>
 </div>
 </main>
 <dialog id="delete-dialog">
-<form method="dialog"><h2>¿Eliminar fotografía?</h2><p id="delete-title"></p><p>Esta acción elimina la fotografía del archivo.</p>
+<form method="dialog"><h2 id="delete-heading">¿Eliminar fotografía?</h2><p id="delete-title"></p><p id="delete-help">Esta acción elimina la fotografía del archivo.</p>
 <div class="actions"><button value="cancel" class="secondary">Cancelar</button><button value="confirm" class="danger">Eliminar</button></div></form>
 </dialog>
 </body>

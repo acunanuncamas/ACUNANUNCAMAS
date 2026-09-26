@@ -19,3 +19,6 @@ El contador se carga desde el Worker de Cloudflare. La URL normal registra el vo
 El enlace GALERÍA DEL HORROR abre una vista en la misma página y obtiene las fotos de la API real de Cloudflare configurada en `<meta name="gallery-api-endpoint">`. Para gestionar fotos, abre `admin-gallery.html` e introduce tu token. Las instrucciones de uso y los orígenes CORS están en `GALLERY_SETUP.md`.
 
 La intro usa WebM con MP4 como alternativa y permite continuar cuando termina el video. Con movimiento reducido se muestra directamente la opción para continuar. El código del Worker y la base D1 no forman parte de este repositorio.
+
+
+Videos: la pestaña y el panel están preparados; la instalación del backend nuevo se explica en [VIDEOS_SETUP.md](VIDEOS_SETUP.md). No se ha desplegado automáticamente.
