@@ -33,7 +33,9 @@ function startBackgroundAudio() {
     return;
   }
   const playback = activeAudio.play();
-  if (playback) playback.catch(() => {});
+  if (playback) playback.then(() => {
+    if (document.hidden || galleryVideoAudioOpen || audioBackgroundPaused) activeAudio.pause();
+  }).catch(() => {});
 }
 function playAudioTrack(audio) {
   activeAudio = audio;
@@ -42,7 +44,9 @@ function playAudioTrack(audio) {
     return;
   }
   const playback = audio.play();
-  if (playback) playback.catch(() => {});
+  if (playback) playback.then(() => {
+    if (document.hidden || galleryVideoAudioOpen || audioBackgroundPaused) activeAudio.pause();
+  }).catch(() => {});
 }
 function pauseBackgroundAudio() {
   if (!audioStarted) return;
@@ -53,7 +57,9 @@ function resumeBackgroundAudio() {
   if (document.hidden || galleryVideoAudioOpen || !audioStarted || !audioBackgroundPaused) return;
   audioBackgroundPaused = false;
   const playback = activeAudio.play();
-  if (playback) playback.catch(() => {});
+  if (playback) playback.then(() => {
+    if (document.hidden || galleryVideoAudioOpen || audioBackgroundPaused) activeAudio.pause();
+  }).catch(() => {});
 }
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) pauseBackgroundAudio();

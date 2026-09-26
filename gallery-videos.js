@@ -136,6 +136,9 @@
     document.dispatchEvent(new CustomEvent('gallery-video-audio', { detail: { open: false } }));
     opener?.focus({ preventScroll: true }); sync();
   });
+  player.addEventListener('play', () => {
+    document.dispatchEvent(new CustomEvent('gallery-video-audio', { detail: { open: true } }));
+  });
   player.addEventListener('error', () => { if (dialog.open) status.textContent = 'No se pudo reproducir este video. Prueba con MP4 compatible con tu celular.'; });
   document.addEventListener('gallery-view-change', () => {
     if (!galleryActive || panel.hidden) { if (dialog.open) dialog.close(); }

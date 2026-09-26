@@ -31,7 +31,7 @@ let renderedGalleryWidth = 0;
 let renderedGalleryCount = 0;
 
 function galleryColumnCount() {
-  if (window.innerWidth < 600) return 2;
+  if (window.innerWidth < 600) return 3;
   if (window.innerWidth < 900) return 3;
   if (window.innerWidth < 1100) return 4;
   return 6;
@@ -202,6 +202,8 @@ async function showGallery() {
   galleryView.classList.add('is-loading');
   await waitForGalleryFade();
   galleryHomeParts.forEach((part) => { part.hidden = true; });
+  poster.classList.add('gallery-layout');
+  document.body.classList.add('gallery-page-open');
   galleryView.hidden = false;
   window.requestAnimationFrame(() => {
     galleryView.classList.add('is-visible');
@@ -228,6 +230,8 @@ async function showHome() {
   window.clearTimeout(galleryEntranceTimer);
   await waitForGalleryFade();
   galleryView.hidden = true;
+  document.querySelector('#poster').classList.remove('gallery-layout');
+  document.body.classList.remove('gallery-page-open');
   galleryHomeParts.forEach((part) => { part.hidden = false; });
   window.requestAnimationFrame(() => {
     const poster = document.querySelector('#poster');
@@ -297,6 +301,20 @@ galleryTabs.forEach((tab, index) => {
     galleryTabs[next].focus();
   });
 });
+
+// Freeze a moving column at its current position before native internal scrolling.
+function enableGalleryManualScroll(event) {
+  const column = event.target.closest('.gallery-column');
+  if (!column || column.classList.contains('is-manual')) return;
+  if (event.type === 'pointerdown' && event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
+  const track = column.querySelector('.gallery-track');
+  const transform = getComputedStyle(track).transform;
+  const offset = transform === 'none' ? 0 : Math.max(0, -new DOMMatrixReadOnly(transform).m42);
+  column.classList.add('is-manual');
+  column.scrollTop = offset;
+}
+galleryView.addEventListener('pointerdown', enableGalleryManualScroll, { passive: true });
+galleryView.addEventListener('wheel', enableGalleryManualScroll, { passive: true });
 
 galleryNavLink.addEventListener('click', (event) => {
   event.preventDefault();
