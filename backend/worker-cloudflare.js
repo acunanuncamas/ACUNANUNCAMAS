@@ -88,6 +88,18 @@ function newsRecord(request, row, admin = false) {
   if (admin) item.has_image = Boolean(row.r2_key);
   return item;
 }
+// Preserve unknown parameters, their encoding/order, and the fragment verbatim.
+function cleanNewsUrl(url) {
+  const parts = url.search.slice(1).split('&');
+  const clean = parts.filter((part) => {
+    let key;
+    try { key = decodeURIComponent(part.split('=', 1)[0].replace(/\+/g, ' ')).toLowerCase(); }
+    catch (_) { return true; }
+    return key !== 'fbclid' && key !== 'mibextid' && !key.startsWith('utm_');
+  });
+  if (clean.length !== parts.length) url.search = clean.length ? '?' + clean.join('&') : '';
+  return url.href;
+}
 function validateNews(body, existing = {}) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('Datos inválidos.');
   const get = (name, fallback) => Object.prototype.hasOwnProperty.call(body, name) ? body[name] : existing[name] ?? fallback;
@@ -109,7 +121,7 @@ function validateNews(body, existing = {}) {
   if (![true, false, 1, 0, '1', '0'].includes(flag)) throw new Error('Estado de publicación inválido.');
   const remove = body.remove_image ?? false;
   if (![true, false, 1, 0, '1', '0'].includes(remove)) throw new Error('Estado de imagen inválido.');
-  return { title: title.trim(), url: url.href, date, type, order, published: [true, 1, '1'].includes(flag) ? 1 : 0, remove: [true, 1, '1'].includes(remove) };
+  return { title: title.trim(), url: cleanNewsUrl(url), date, type, order, published: [true, 1, '1'].includes(flag) ? 1 : 0, remove: [true, 1, '1'].includes(remove) };
 }
 async function readNewsBody(request) {
   const type = request.headers.get('Content-Type') || '';

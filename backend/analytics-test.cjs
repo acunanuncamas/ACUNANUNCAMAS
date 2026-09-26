@@ -86,6 +86,7 @@ async function main() {
     setAttribute(name, value) { this[name] = value; }
     replaceChildren(...children) { this.children = children; }
     append(...children) { this.children.push(...children); }
+    prepend(...children) { this.children.unshift(...children); }
     querySelectorAll() { return []; }
     get options() { return this.children; }
   }

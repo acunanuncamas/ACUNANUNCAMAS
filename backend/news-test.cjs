@@ -67,6 +67,20 @@ async function main() {
  assert.equal((await call('/api/admin/news','POST',form(draft,Buffer.alloc(10*1024*1024+1)))).status,413);
  assert.equal((await call('/api/admin/news','POST',form(draft,Buffer.alloc(0)))).status,400);
  assert.equal(objects.size,0);
+ const urlCases = [
+  ['https://www.facebook.com/story.php?story_fbid=123&id=456&fbclid=ABC&mibextid=XYZ&utm_source=share#post', 'https://www.facebook.com/story.php?story_fbid=123&id=456#post'],
+  ['https://l.facebook.com/l.php?u=https%3A%2F%2Fexample.org%2Fpost%3Fid%3D7&h=AbC%20DeF&utm_campaign=test', 'https://l.facebook.com/l.php?u=https%3A%2F%2Fexample.org%2Fpost%3Fid%3D7&h=AbC%20DeF'],
+  ['https://example.org/post?id=7&utm_source=a&utm_medium=b&utm_campaign=c&utm_term=d&utm_content=e&utm_custom=f&unknown=a%20b&unknown=c%2Bd#section', 'https://example.org/post?id=7&unknown=a%20b&unknown=c%2Bd#section'],
+  ['https://example.org/post?%66bclid=x&UTM_SOURCE=y&token=123%2B456&empty=&other#part', 'https://example.org/post?token=123%2B456&empty=&other#part'],
+  ['https://example.org/post?utm_source=only#keep', 'https://example.org/post#keep'],
+  ['https://example.org/post?signature=a%20b&id=7&id=8#unchanged', 'https://example.org/post?signature=a%20b&id=7&id=8#unchanged']
+ ];
+ for (const [url, expected] of urlCases) {
+  const created=await call('/api/admin/news','POST',{...draft,url}); assert.equal(created.status,201); assert.equal(created.data.item.url,expected);
+  assert.equal(execute([{sql:'SELECT external_url FROM news_entries WHERE id = ?',args:[created.data.item.id]}])[0].results[0].external_url,expected);
+  const edited=await call('/api/admin/news/'+created.data.item.id,'PATCH',{url}); assert.equal(edited.data.item.url,expected);
+  await call('/api/admin/news/'+created.data.item.id,'DELETE');
+ }
  let result=await call('/api/admin/news','POST',form(draft)); assert.equal(result.status,201);
  const id=result.data.item.id; assert.equal(result.data.item.has_image,true); assert.equal(result.data.item.image_url,null);
  assert.ok([...objects.keys()][0].startsWith('news/'));
