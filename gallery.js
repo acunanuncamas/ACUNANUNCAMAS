@@ -120,16 +120,24 @@ function renderGalleryColumns() {
   renderedGalleryCount = count;
   renderedGalleryWidth = window.innerWidth;
   galleryColumns.style.setProperty('--gallery-count', String(count));
-  const groups = Array.from({ length: count }, () => []);
-  galleryPhotos.forEach((photo, index) => groups[index % count].push(index));
+  const groups = Array.from({ length: count }, () => {
+    const indices = galleryPhotos.map((photo, index) => index);
+    // Each column draws from the entire gallery, in its own shuffled order.
+    for (let index = indices.length - 1; index > 0; index--) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [indices[index], indices[randomIndex]] = [indices[randomIndex], indices[index]];
+    }
+    return indices;
+  });
   const width = Math.min(window.innerWidth - 32, 1280) / count;
   const minimumItems = Math.ceil(window.innerHeight / Math.max(70, width * .7)) + 2;
 
   groups.forEach((indices, columnIndex) => {
-    const sourceIndices = indices.length ? indices : [columnIndex % galleryPhotos.length];
+    const sourceIndices = indices;
     const displayedIndices = sourceIndices.slice();
-    for (let index = 0; displayedIndices.length < minimumItems; index++) {
-      displayedIndices.push(sourceIndices[index % sourceIndices.length]);
+    // Complete cycles preserve a seamless loop without adjacent duplicate photos.
+    while (displayedIndices.length < minimumItems) {
+      displayedIndices.push(...sourceIndices);
     }
     const column = document.createElement('div');
     column.className = 'gallery-column';
