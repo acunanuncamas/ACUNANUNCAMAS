@@ -385,8 +385,8 @@ footer span:not(.footer-mark) { color: #bdb5ab; }
 .intro { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #000; opacity: 1; transition: opacity var(--intro-fade-duration, 1400ms) ease-in-out; }
 .intro video { display: block; width: auto; height: min(100dvh, 100svh); max-width: 100vw; object-fit: contain; }
 .intro.is-leaving { opacity: 0; pointer-events: none; }
-.skip-intro { position: absolute; right: 50%; bottom: max(24px, env(safe-area-inset-bottom)); transform: translateX(50%); border: 1px solid var(--red); padding: 9px 11px; color: var(--red); background: #000d; font-size: 12px; cursor: pointer; }
-.skip-intro:focus-visible { outline: 1px solid var(--red); outline-offset: 2px; }
+.skip-intro { position: absolute; right: 50%; bottom: max(24px, env(safe-area-inset-bottom)); transform: translateX(50%); border: 2px solid var(--red); outline: 2px solid var(--red); outline-offset: 4px; padding: 13px 20px; min-height: 48px; max-width: calc(100vw - 32px); color: #fff; background: var(--red); font-size: clamp(16px, 4vw, 19px); cursor: pointer; }
+.skip-intro:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
 .skip-intro.is-ready { animation: skip-intro-float 2.8s ease-in-out infinite; }
 .skip-intro span { margin-left: 7px; }
 .audio-toggle { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: max(32px, calc(env(safe-area-inset-bottom) + 16px)); z-index: 40; display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid #d9d5cb99; border-radius: 50%; color: var(--paper); background: #000b; cursor: pointer; }
