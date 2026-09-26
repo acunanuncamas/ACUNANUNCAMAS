@@ -21,7 +21,7 @@ async function handleVideoRequest(request, env, helpers) {
     if (!row || !row.active) return respond({ error: 'Video no encontrado.' }, 404);
     const head = await env.GALLERY_BUCKET.head(row.r2_key);
     if (!head) return respond({ error: 'Archivo no encontrado.' }, 404);
-    const headers = new Headers({ 'Access-Control-Allow-Origin': origin === allowedOrigin ? allowedOrigin : 'null', 'Access-Control-Expose-Headers': 'Content-Range, Accept-Ranges, Content-Length', 'Accept-Ranges': 'bytes', 'Cache-Control': 'public, max-age=3600', 'ETag': head.httpEtag, 'Vary': 'Origin', 'X-Content-Type-Options': 'nosniff' });
+    const headers = new Headers({ 'Access-Control-Allow-Origin': origin === allowedOrigin ? allowedOrigin : 'null', 'Access-Control-Expose-Headers': 'Content-Range, Accept-Ranges, Content-Length', 'Accept-Ranges': 'bytes', 'Cache-Control': 'public, max-age=3600', 'ETag': head.httpEtag, 'Vary': 'Origin', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin' });
     head.writeHttpMetadata(headers);
     headers.set('Content-Length', String(head.size));
     if (request.method === 'HEAD') return new Response(null, { headers });
@@ -117,6 +117,8 @@ function corsHeaders(origin = "") {
     "Access-Control-Allow-Headers": "Content-Type, Authorization, Range",
     "Content-Type": "application/json; charset=UTF-8",
     "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
   };
 }
 
@@ -169,6 +171,53 @@ const ALLOWED_IMAGE_TYPES = new Map([
   ["image/gif", "gif"],
   ["image/avif", "avif"],
 ]);
+
+function hasImageSignature(buffer, type) {
+  const bytes = new Uint8Array(buffer);
+  const ascii = (offset, length) =>
+    String.fromCharCode(...bytes.subarray(offset, offset + length));
+
+  if (type === "image/jpeg") {
+    return bytes.length >= 3 &&
+      bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  }
+
+  if (type === "image/png") {
+    const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+    return bytes.length >= signature.length &&
+      signature.every((value, index) => bytes[index] === value);
+  }
+
+  if (type === "image/webp") {
+    return bytes.length >= 12 &&
+      ascii(0, 4) === "RIFF" && ascii(8, 4) === "WEBP";
+  }
+
+  if (type === "image/gif") {
+    if (bytes.length < 6) return false;
+    const signature = ascii(0, 6);
+    return signature === "GIF87a" || signature === "GIF89a";
+  }
+
+  if (type === "image/avif") {
+    if (bytes.length < 12 || ascii(4, 4) !== "ftyp") return false;
+    for (let offset = 8; offset + 4 <= bytes.length && offset < 64; offset += 4) {
+      const brand = ascii(offset, 4);
+      if (brand === "avif" || brand === "avis") return true;
+    }
+  }
+
+  return false;
+}
+
+function methodNotAllowed(origin, allowedMethods) {
+  const headers = new Headers(corsHeaders(origin));
+  headers.set("Allow", allowedMethods.join(", "));
+  return new Response(JSON.stringify({ error: "Método no permitido." }), {
+    status: 405,
+    headers,
+  });
+}
 
 function galleryImageUrl(request, id) {
   const url = new URL(request.url);
@@ -631,6 +680,8 @@ export default {
         );
 
         headers.set("ETag", object.httpEtag);
+        headers.set("X-Content-Type-Options", "nosniff");
+        headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
 
         headers.set(
           "Access-Control-Allow-Origin",
@@ -863,6 +914,16 @@ export default {
           `gallery/${crypto.randomUUID()}.${extension}`;
 
         const buffer = await image.arrayBuffer();
+
+        if (!hasImageSignature(buffer, image.type)) {
+          return json(
+            {
+              error: "El contenido del archivo no coincide con el formato de imagen declarado.",
+            },
+            400,
+            origin
+          );
+        }
 
         await env.GALLERY_BUCKET.put(
           r2Key,
@@ -1213,6 +1274,24 @@ export default {
           200,
           origin
         );
+      }
+
+      const routeMethods = new Map([
+        ["/", ["GET"]],
+        ["/api/counter", ["GET"]],
+        ["/api/counter/status", ["GET"]],
+        ["/api/counter/increment", ["POST"]],
+        ["/api/admin/counter", ["POST"]],
+        ["/api/news", ["GET"]],
+        ["/api/gallery", ["GET"]],
+        ["/api/admin/gallery", ["GET", "POST"]],
+      ]);
+      const allowedMethods = routeMethods.get(url.pathname) ||
+        (publicImageMatch ? ["GET"] : null) ||
+        (adminGalleryMatch ? ["PATCH", "DELETE"] : null);
+
+      if (allowedMethods) {
+        return methodNotAllowed(origin, allowedMethods);
       }
 
       /* =====================================
