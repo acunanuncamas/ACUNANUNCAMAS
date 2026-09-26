@@ -1,0 +1,19 @@
+{
+  "name": "mafia-tacna-api",
+  "main": "worker-cloudflare.js",
+  "compatibility_date": "2026-09-26",
+  "keep_vars": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mafia-tacna-db",
+      "database_id": "cc29c8a6-922e-4563-9837-fdfb45d5c239"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "GALLERY_BUCKET",
+      "bucket_name": "acunanuncamas-gallery"
+    }
+  ]
+}
