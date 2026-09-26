@@ -1,3 +1,4 @@
+import { handleAnalyticsRequest } from "./worker-analytics.js";
 import { handleVideoRequest } from "./worker-videos.js";
 const ALLOWED_ORIGIN = "https://lamafiadelnorteentacna.github.io";
 
@@ -90,6 +91,8 @@ export default {
     }
 
     try {
+      const analyticsResponse = await handleAnalyticsRequest(request, env, { json, isAdmin, origin, allowedOrigin: ALLOWED_ORIGIN });
+      if (analyticsResponse) return analyticsResponse;
       const videoResponse = await handleVideoRequest(request, env, { json, isAdmin, origin, allowedOrigin: ALLOWED_ORIGIN });
       if (videoResponse) return videoResponse;
       /* =====================================

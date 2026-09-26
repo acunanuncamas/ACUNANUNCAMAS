@@ -1,0 +1,12 @@
+{
+  // LOCAL TESTING ONLY. The zero UUID is not a remote database.
+  "name": "mafia-tacna-analytics-local",
+  "main": "worker.js",
+  "compatibility_date": "2026-09-26",
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "analytics-local",
+    "database_id": "00000000-0000-0000-0000-000000000000"
+  }],
+  "vars": { "ADMIN_TOKEN": "local-test-only" }
+}

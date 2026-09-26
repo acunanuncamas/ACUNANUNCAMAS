@@ -40,6 +40,7 @@
     syncControls();
   }
   function endSession() {
+    stopStats();
     token = '';
     saveSession('');
     $('admin-token').value = '';
@@ -76,6 +77,62 @@
       throw error;
     } finally { clearTimeout(timeout); }
   }
+  let statsTimer = null;
+  let statsGeneration = 0;
+  let statsLoading = false;
+  let statsLastFetch = 0;
+  function stopStats() {
+    clearInterval(statsTimer); statsTimer = null;
+    statsGeneration++; statsLoading = false; statsLastFetch = 0;
+    ['today', 'unique', 'online', 'total'].forEach((key) => { $('stats-' + key).textContent = '—'; });
+    $('stats-chart').replaceChildren();
+    $('stats-status').textContent = 'Cargando estadísticas…';
+  }
+  async function refreshStats() {
+    if (!token || $('workspace').hidden || document.hidden || statsLoading) return;
+    const generation = statsGeneration;
+    statsLoading = true;
+    statsLastFetch = Date.now();
+    $('stats-panel')?.setAttribute('aria-busy', 'true');
+    $('stats-status').textContent = 'Actualizando estadísticas…';
+    $('stats-status').dataset.error = 'false';
+    try {
+      const data = await request('/api/admin/stats');
+      if (generation !== statsGeneration || !token || $('workspace').hidden) return;
+      if (![data.today, data.uniqueToday, data.online, data.total].every((n) => Number.isSafeInteger(n) && n >= 0) || !Array.isArray(data.days) || data.days.length !== 7 || !data.days.every((d) => /^\d{4}-\d{2}-\d{2}$/.test(d.day) && Number.isSafeInteger(d.visits) && d.visits >= 0)) throw new Error('Estadísticas no válidas.');
+      const format = new Intl.NumberFormat('es-PE');
+      [['today', data.today], ['unique', data.uniqueToday], ['online', data.online], ['total', data.total]].forEach(([key, value]) => { $('stats-' + key).textContent = format.format(value); });
+      const maximum = Math.max(1, ...data.days.map((d) => d.visits));
+      const columns = data.days.map((day) => {
+        const column = document.createElement('div'); column.className = 'stats-column';
+        column.setAttribute('aria-label', day.day + ': ' + format.format(day.visits) + ' visitas');
+        const value = document.createElement('span'); value.textContent = format.format(day.visits);
+        const track = document.createElement('div'); track.className = 'stats-track'; track.setAttribute('aria-hidden', 'true');
+        const bar = document.createElement('div'); bar.className = 'stats-bar'; bar.style.height = (day.visits / maximum * 100) + '%'; track.append(bar);
+        const label = document.createElement('span'); label.textContent = day.day.slice(8) + '/' + day.day.slice(5, 7);
+        column.append(value, track, label); return column;
+      });
+      $('stats-chart').replaceChildren(...columns);
+      $('stats-status').textContent = 'Actualizado a las ' + new Date().toLocaleTimeString('es-PE') + ' · Actualización cada minuto.';
+    } catch (error) {
+      if (generation !== statsGeneration) return;
+      // Old figures must not appear to be live after a failed request.
+      ['today', 'unique', 'online', 'total'].forEach((key) => { $('stats-' + key).textContent = '—'; });
+      $('stats-chart').replaceChildren();
+      $('stats-status').textContent = 'No se pudo cargar el resumen. ' + error.message + ' Puedes reintentar con Actualizar resumen.';
+      $('stats-status').dataset.error = 'true';
+    } finally {
+      if (generation === statsGeneration) { statsLoading = false; $('stats-panel')?.setAttribute('aria-busy', 'false'); }
+    }
+  }
+  function startStats() {
+    stopStats(); void refreshStats();
+    statsTimer = setInterval(() => { void refreshStats(); }, 60000);
+  }
+  $('stats-refresh').addEventListener('click', () => { void refreshStats(); });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && statsTimer && Date.now() - statsLastFetch >= 60000) void refreshStats();
+  });
   function field(parent, labelText, value = '', type = 'text') {
     const label = document.createElement('label');
     label.textContent = labelText;
@@ -298,6 +355,7 @@
       saveSession($('remember-token').checked ? token : '');
       $('admin-token').value = '';
       $('login-panel').hidden = true; $('workspace').hidden = false;
+      startStats();
       notify('Acceso autorizado.');
     } catch (error) { endSession(); notify(error.message, 'error'); }
     finally { setBusy(false); }
@@ -345,7 +403,7 @@
     try { token = sessionStorage.getItem(STORAGE) || ''; } catch (_) {}
     if (!token) return;
     setBusy(true);
-    try { await refreshList(); $('login-panel').hidden = true; $('workspace').hidden = false; }
+    try { await refreshList(); $('login-panel').hidden = true; $('workspace').hidden = false; startStats(); }
     catch (error) { endSession(); notify(error.message, 'error'); }
     finally { setBusy(false); }
   })();

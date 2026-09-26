@@ -32,3 +32,14 @@ dialog::backdrop{background:#000c}dialog p{overflow-wrap:anywhere}
 .admin-media-tabs button { min-height: 44px; flex: 1; background: #17171b; color: #ddd; border: 1px solid #555; }
 .admin-media-tabs button[aria-pressed="true"] { background: #b80e23; color: #fff; border-color: #e03143; }
 .photo-card video { display: block; width: 100%; height: 220px; object-fit: contain; background: #000; border-radius: 3px; }
+.stats-panel h3{font-size:13px;letter-spacing:.08em;margin:24px 0 16px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.stats-card{padding:16px;border:1px solid #38323a;border-radius:5px;background:#171519;min-width:0}
+.stats-card span{display:block;font:11px/1.5 monospace;color:var(--muted)}
+.stats-card strong{display:block;font-size:clamp(24px,4vw,36px);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.stats-chart{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;min-height:165px}
+.stats-column{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;font:11px monospace}
+.stats-track{height:115px;width:100%;display:flex;align-items:flex-end;border-bottom:1px solid #665d65}
+.stats-bar{background:var(--red);width:100%;border-radius:3px 3px 0 0}
+.stats-help{font-size:12px;margin-bottom:0}#stats-status[data-error=true]{color:#ffd1da}
+@media(max-width:700px){.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stats-panel .section-title{flex-wrap:wrap}.stats-chart{gap:4px}}

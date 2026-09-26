@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Administrar galería</title>
-<link rel="stylesheet" href="admin-gallery.css?v=2">
-<script src="admin-gallery.js?v=2" defer></script>
+<link rel="stylesheet" href="admin-gallery.css?v=3">
+<script src="admin-gallery.js?v=3" defer></script>
 </head>
 <body>
 <main class="admin-shell">
@@ -21,6 +21,19 @@
 </form>
 </section>
 <div id="workspace" hidden>
+<section id="stats-panel" class="panel stats-panel" aria-labelledby="stats-heading">
+<div class="section-title"><h2 id="stats-heading">RESUMEN</h2><button id="stats-refresh" class="secondary" type="button">Actualizar resumen</button></div>
+<p id="stats-status" role="status" aria-live="polite">Cargando estadísticas…</p>
+<div class="stats-grid">
+<div class="stats-card"><span>VISITAS HOY</span><strong id="stats-today">—</strong></div>
+<div class="stats-card"><span>ÚNICOS HOY</span><strong id="stats-unique">—</strong></div>
+<div class="stats-card"><span>EN LÍNEA</span><strong id="stats-online">—</strong></div>
+<div class="stats-card"><span>VISITAS TOTAL</span><strong id="stats-total">—</strong></div>
+</div>
+<h3>VISITAS ÚLTIMOS 7 DÍAS</h3>
+<div id="stats-chart" class="stats-chart" aria-label="Visitas por día"></div>
+<p class="stats-help">Días en hora de Perú · En línea: actividad en los últimos 5 minutos · Únicos estimados por navegador.</p>
+</section>
 <div class="admin-media-tabs" role="group" aria-label="Tipo de archivo"><button type="button" data-admin-media="photos" aria-pressed="true">FOTOS</button><button type="button" data-admin-media="videos" aria-pressed="false">VIDEOS</button></div>
 <div class="toolbar"><p>Sesión de administración activa</p><button id="logout" class="secondary" type="button">Cerrar sesión</button></div>
 <section class="panel">
