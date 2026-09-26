@@ -97,7 +97,6 @@ function makeGalleryCard(photo, photoIndex, visualCopy, eager) {
   card.type = 'button';
   card.className = 'gallery-photo';
   card.dataset.photoIndex = String(photoIndex);
-  card.style.setProperty('--photo-ratio', ['4 / 5', '3 / 4', '5 / 4'][photoIndex % 3]);
   card.setAttribute('aria-label', 'Ampliar fotografía' + (photo.title ? ': ' + photo.title : ''));
   if (visualCopy) card.tabIndex = -1;
   const image = document.createElement('img');

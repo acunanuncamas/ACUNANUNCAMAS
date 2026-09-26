@@ -552,7 +552,7 @@ footer span:not(.footer-mark) { color: #bdb5ab; }
 .gallery-photo {
   display: block;
   width: 100%;
-  aspect-ratio: var(--photo-ratio, 4 / 5);
+  aspect-ratio: 4 / 5;
   padding: 0;
   overflow: hidden;
   border: 0;
