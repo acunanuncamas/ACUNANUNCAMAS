@@ -11,6 +11,7 @@ const audioOutro = new Audio('img/AUDIO3.MP3');
 const audioMuted = localStorage.getItem('audio-muted') === 'true';
 let activeAudio = audioIntro;
 let audioStarted = false;
+let audioBackgroundPaused = false;
 [audioIntro, audioMain, audioOutro].forEach((audio) => {
   audio.preload = 'auto';
   audio.volume = 0.35;
@@ -26,14 +27,40 @@ function startBackgroundAudio() {
   audioStarted = true;
   audioIntro.currentTime = 0;
   activeAudio = audioIntro;
+  if (document.hidden || audioBackgroundPaused) {
+    audioBackgroundPaused = true;
+    return;
+  }
   const playback = activeAudio.play();
   if (playback) playback.catch(() => {});
 }
 function playAudioTrack(audio) {
   activeAudio = audio;
+  if (document.hidden || audioBackgroundPaused) {
+    audioBackgroundPaused = true;
+    return;
+  }
   const playback = audio.play();
   if (playback) playback.catch(() => {});
 }
+function pauseBackgroundAudio() {
+  if (!audioStarted) return;
+  audioBackgroundPaused = true;
+  [audioIntro, audioMain, audioOutro].forEach((audio) => audio.pause());
+}
+function resumeBackgroundAudio() {
+  if (document.hidden || !audioStarted || !audioBackgroundPaused) return;
+  audioBackgroundPaused = false;
+  const playback = activeAudio.play();
+  if (playback) playback.catch(() => {});
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) pauseBackgroundAudio();
+  else resumeBackgroundAudio();
+});
+window.addEventListener('pagehide', pauseBackgroundAudio);
+window.addEventListener('pageshow', resumeBackgroundAudio);
+
 function updateAudioToggle(muted) {
   audioToggle.classList.toggle('is-muted', muted);
   audioToggle.setAttribute('aria-pressed', String(muted));
