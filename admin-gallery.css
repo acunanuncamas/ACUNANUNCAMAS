@@ -43,3 +43,6 @@ dialog::backdrop{background:#000c}dialog p{overflow-wrap:anywhere}
 .stats-bar{background:var(--red);width:100%;border-radius:3px 3px 0 0}
 .stats-help{font-size:12px;margin-bottom:0}#stats-status[data-error=true]{color:#ffd1da}
 @media(max-width:700px){.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stats-panel .section-title{flex-wrap:wrap}.stats-chart{gap:4px}}
+
+.news-editor h3{margin:0 0 16px;font-size:17px}.news-editor select{display:block;width:100%;margin-top:5px;padding:10px;border:1px solid #514a50;border-radius:4px;background:#09090b;color:var(--paper);font:inherit}
+#news-create{max-width:680px;margin:24px 0 30px}.news-editor input[type=file]{font-size:12px}.admin-media-tabs{flex-wrap:wrap}.admin-media-tabs button{min-width:85px}

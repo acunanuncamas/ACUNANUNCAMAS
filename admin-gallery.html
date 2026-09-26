@@ -5,15 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Administrar galería</title>
-<link rel="stylesheet" href="admin-gallery.css?v=3">
-<script src="admin-gallery.js?v=3" defer></script>
+<link rel="stylesheet" href="admin-gallery.css?v=4">
+<script src="admin-news.js?v=1" defer></script>
+<script src="admin-gallery.js?v=4" defer></script>
 </head>
 <body>
 <main class="admin-shell">
 <header><div><p class="eyebrow">ARCHIVO / ADMINISTRACIÓN</p><h1>Galería<span>.</span></h1></div><a href="index.html">Ver la web ↗</a></header>
 <p id="notice" role="status" aria-live="polite"></p>
 <section id="login-panel" class="panel">
-<h2>Acceso privado</h2><p>Introduce tu token de administrador para gestionar las fotografías y los videos.</p>
+<h2>Acceso privado</h2><p>Introduce tu token de administrador para gestionar las fotografías, los videos y las noticias.</p>
 <form id="login-form">
 <label>Token de administrador<input id="admin-token" type="password" autocomplete="off" spellcheck="false" required></label>
 <label class="inline"><input id="remember-token" type="checkbox"> Mantener acceso en esta pestaña</label>
@@ -34,9 +35,9 @@
 <div id="stats-chart" class="stats-chart" aria-label="Visitas por día"></div>
 <p class="stats-help">Días en hora de Perú · En línea: actividad en los últimos 5 minutos · Únicos estimados por navegador.</p>
 </section>
-<div class="admin-media-tabs" role="group" aria-label="Tipo de archivo"><button type="button" data-admin-media="photos" aria-pressed="true">FOTOS</button><button type="button" data-admin-media="videos" aria-pressed="false">VIDEOS</button></div>
+<div class="admin-media-tabs" role="group" aria-label="Sección del archivo"><button type="button" data-admin-media="photos" aria-pressed="true">FOTOS</button><button type="button" data-admin-media="videos" aria-pressed="false">VIDEOS</button><button type="button" data-admin-media="news" aria-pressed="false">NOTICIAS</button></div>
 <div class="toolbar"><p>Sesión de administración activa</p><button id="logout" class="secondary" type="button">Cerrar sesión</button></div>
-<section class="panel">
+<section id="media-upload-panel" class="panel">
 <div class="section-title"><h2 id="upload-heading">Subir fotografías</h2><span id="upload-kind">01 / NUEVAS IMÁGENES</span></div>
 <label id="drop-zone" class="drop-zone" tabindex="0">
 <strong id="drop-heading">Arrastra tus fotografías aquí</strong><span id="drop-help">o pulsa para seleccionarlas · puedes elegir varias</span>
@@ -45,10 +46,17 @@
 <div id="queue" class="photo-grid"></div>
 <div class="toolbar"><p id="queue-summary">No hay archivos seleccionados.</p><button id="upload-all" type="button" disabled>Subir pendientes</button></div>
 </section>
-<section class="panel">
+<section id="media-list-panel" class="panel">
 <div class="section-title"><h2 id="list-heading">Archivo de fotografías</h2><button id="refresh" class="secondary" type="button">Actualizar lista</button></div>
 <p id="list-status" role="status"></p>
 <div id="photo-list" class="photo-grid"></div>
+</section>
+<section id="news-admin-panel" class="panel" hidden>
+<div class="section-title"><h2>NOTICIAS</h2><button id="news-refresh" class="secondary" type="button">Actualizar noticias</button></div>
+<div id="news-create"></div>
+<h2>Archivo de noticias</h2>
+<p id="news-list-status" role="status" aria-live="polite"></p>
+<div id="news-list" class="photo-grid"></div>
 </section>
 </div>
 </main>

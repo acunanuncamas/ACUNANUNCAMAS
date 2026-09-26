@@ -87,12 +87,13 @@ async function main() {
     replaceChildren(...children) { this.children = children; }
     append(...children) { this.children.push(...children); }
     querySelectorAll() { return []; }
+    get options() { return this.children; }
   }
   const elements = new Map();
   const element = (id) => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
   element('workspace').hidden = true;
   const listeners = {};
-  const document = { hidden: false, getElementById: element, querySelectorAll: () => [], createElement: () => new Element(), addEventListener: (name, fn) => { listeners[name] = fn; } };
+  const document = { hidden: false, getElementById: element, querySelectorAll: () => [], createElement: () => new Element(), createTextNode: (text) => text, addEventListener: (name, fn) => { listeners[name] = fn; } };
   const requests = []; let failStats = false; let unauthorizedStats = false;
   const intervals = new Map(); let timer = 0;
   const storage = new Map();
@@ -108,6 +109,8 @@ async function main() {
       return { ok: !denied, status: denied ? 401 : 200, text: async () => JSON.stringify(url.endsWith('/stats') ? (denied ? {error:'Unauthorized'} : { today: 2, uniqueToday: 1, online: 1, total: 4, days: Array.from({length:7}, (_,i) => ({day:'2026-09-' + (20+i),visits:i})) }) : {items:[]}) };
     }
   };
+  context.window = context;
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../admin-news.js'), 'utf8'), context);
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../admin-gallery.js'), 'utf8'), context);
   const flush = async () => { for(let i=0;i<10;i++) await Promise.resolve(); };
   element('admin-token').value = 'test-only';

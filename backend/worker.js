@@ -1,3 +1,4 @@
+import { handleNewsRequest } from "./worker-news.js";
 import { handleAnalyticsRequest } from "./worker-analytics.js";
 import { handleVideoRequest } from "./worker-videos.js";
 const ALLOWED_ORIGIN = "https://lamafiadelnorteentacna.github.io";
@@ -91,6 +92,8 @@ export default {
     }
 
     try {
+      const newsResponse = await handleNewsRequest(request, env, { json, isAdmin, origin, allowedOrigin: ALLOWED_ORIGIN });
+      if (newsResponse) return newsResponse;
       const analyticsResponse = await handleAnalyticsRequest(request, env, { json, isAdmin, origin, allowedOrigin: ALLOWED_ORIGIN });
       if (analyticsResponse) return analyticsResponse;
       const videoResponse = await handleVideoRequest(request, env, { json, isAdmin, origin, allowedOrigin: ALLOWED_ORIGIN });
@@ -389,40 +392,6 @@ export default {
             success: true,
             action,
             value: row?.value ?? 0,
-          },
-          200,
-          origin
-        );
-      }
-
-      /* =====================================
-         NOTICIAS
-      ===================================== */
-
-      if (
-        url.pathname === "/api/news" &&
-        request.method === "GET"
-      ) {
-        const result = await env.DB
-          .prepare(`
-            SELECT
-              id,
-              title,
-              summary,
-              content,
-              image_url,
-              published,
-              created_at,
-              updated_at
-            FROM news
-            WHERE published = 1
-            ORDER BY created_at DESC
-          `)
-          .all();
-
-        return json(
-          {
-            items: result.results ?? [],
           },
           200,
           origin

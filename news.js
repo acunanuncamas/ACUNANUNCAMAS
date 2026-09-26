@@ -7,8 +7,7 @@
   const poster = document.querySelector('#poster');
   if (!view || !collage || !nav || !back) return;
 
-  // Demo data only. Replace this array with normalized API data in a later stage.
-  // Required: title, url. Optional: image, date. No fetch or backend dependency.
+  // Temporary fallback when the API is unavailable or has no published news.
   const newsItems = [
     { title: 'La ciudad también se escribe después de medianoche', image: 'img/news-city.svg', date: '2026-09-26', url: 'https://example.org/#ciudad' },
     { title: 'Un archivo vecinal rescata las voces del barrio', date: '2026-09-25', url: 'https://example.org/#archivo' },
@@ -26,7 +25,36 @@
   const layouts = ['lead', 'dispatch', 'photo', 'manifesto', 'wide', 'brief', 'signal', 'brief', 'feature', 'quote', 'brief', 'brief'];
   let active = false;
   let switching = false;
-  let rendered = false;
+  let loading = null;
+  const endpoint = new URL('/api/news', galleryEndpoint).href;
+  const demoLabel = document.querySelector('.news-demo');
+  const visualLayouts = { principal: ['lead'], mediana: ['photo', 'wide', 'feature'], pequena: ['brief', 'dispatch', 'signal'], tipografica: ['manifesto', 'quote'] };
+  async function loadNews() {
+    if (loading) return loading;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    loading = (async () => {
+      if (demoLabel) demoLabel.textContent = 'CARGANDO NOTICIAS…';
+      try {
+        const response = await fetch(endpoint, { cache: 'no-store', signal: controller.signal, credentials: 'omit' });
+        if (!response.ok) throw new Error('News API HTTP ' + response.status);
+        const data = await response.json();
+        if (!Array.isArray(data.items)) throw new Error('Invalid news response');
+        const items = data.items.filter((item) => item && [1, true].includes(item.published) && typeof item.title === 'string' && item.title.trim() && typeof item.url === 'string');
+        if (items.length) {
+          renderNews(items.map((item) => ({ ...item, image: item.image_url ? new URL(item.image_url, endpoint).href : null })));
+          if (demoLabel) demoLabel.textContent = 'ARCHIVO / NOTICIAS PUBLICADAS';
+        } else {
+          renderNews(newsItems);
+          if (demoLabel) demoLabel.textContent = 'PORTADA DE PRUEBA · Todavía no hay noticias publicadas.';
+        }
+      } catch (_) {
+        renderNews(newsItems);
+        if (demoLabel) demoLabel.textContent = 'PORTADA DE PRUEBA · No se pudo consultar el archivo. Vuelve a entrar para reintentar.';
+      } finally { clearTimeout(timeout); loading = null; }
+    })();
+    return loading;
+  }
   const fade = () => new Promise((resolve) => setTimeout(resolve, galleryReducedMotion.matches ? 0 : 360));
 
   function renderNews(items) {
@@ -37,13 +65,15 @@
       try { url = new URL(item.url, location.href); } catch (_) { return; }
       if (!['http:', 'https:'].includes(url.protocol)) return;
       const article = document.createElement('article');
-      article.className = 'news-story news-story--' + layouts[index % layouts.length];
+      const choices = visualLayouts[item.visual_type];
+      const layout = choices ? choices[index % choices.length] : layouts[index % layouts.length];
+      article.className = 'news-story news-story--' + layout;
       article.style.setProperty('--news-delay', Math.min(index, 5) * 45 + 'ms');
       const link = document.createElement('a');
       link.className = 'news-story-link';
       link.href = url.href; link.target = '_blank'; link.rel = 'noopener noreferrer';
       link.setAttribute('aria-label', item.title + ' (abre en una pestaña nueva)');
-      if (typeof item.image === 'string' && item.image.trim()) {
+      if (item.visual_type !== 'tipografica' && typeof item.image === 'string' && item.image.trim()) {
         try {
           const imageUrl = new URL(item.image, location.href);
           if (['http:', 'https:', 'file:'].includes(imageUrl.protocol)) {
@@ -81,7 +111,7 @@
       await fade();
       galleryHomeParts.forEach((part) => { part.hidden = true; });
       poster.classList.add('news-layout');
-      if (!rendered) { renderNews(newsItems); rendered = true; }
+      void loadNews();
       view.hidden = false;
       // Commit the opacity start state before fading the section in.
       void view.offsetWidth;

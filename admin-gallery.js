@@ -21,7 +21,7 @@
     } catch (_) { /* The current in-memory session still works. */ }
   }
   function syncControls() {
-    document.querySelectorAll('#workspace input, #workspace textarea, #workspace button, #login-form input, #login-form button')
+    document.querySelectorAll('#workspace input, #workspace textarea, #workspace select, #workspace button, #login-form input, #login-form button')
       .forEach((control) => { control.disabled = busy; });
     queue.filter((item) => item.state === 'done').forEach((item) => {
       item.card.querySelectorAll('input, textarea').forEach((field) => { field.disabled = true; });
@@ -47,6 +47,8 @@
     $('workspace').hidden = true;
     $('login-panel').hidden = false;
     $('photo-list').replaceChildren();
+    newsAdmin.reset();
+    if (mediaType === 'news') { mediaType = 'photos'; updateMediaMode(); }
     clearQueue();
   }
   function failure(status, data) {
@@ -62,8 +64,9 @@
     try {
       const response = await fetch(API + path, {
         ...options, cache: 'no-store', signal: controller.signal,
-        headers: { Authorization: 'Bearer ' + token, ...(options.body ? { 'Content-Type': 'application/json' } : {}) }
+        headers: { Authorization: 'Bearer ' + token, ...(options.body && !(options.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}) }
       });
+      if (response.ok && options.raw) return await response.blob();
       const text = await response.text();
       let data = {};
       try { data = text ? JSON.parse(text) : {}; } catch (_) {
@@ -77,6 +80,7 @@
       throw error;
     } finally { clearTimeout(timeout); }
   }
+  const newsAdmin = window.createNewsAdmin({ request, setBusy, isBusy: () => busy, notify, hasSession: () => Boolean(token) });
   let statsTimer = null;
   let statsGeneration = 0;
   let statsLoading = false;
@@ -252,6 +256,7 @@
     });
   }
   async function refreshList() {
+    if (mediaType === 'news') return newsAdmin.refresh();
     $('list-status').textContent = 'Cargando ' + mediaLabel() + '…';
     try {
       const data = await request(listPath());
@@ -320,6 +325,12 @@
     $('photo-list').append(form);
   }
   function updateMediaMode() {
+    const news = mediaType === 'news';
+    $('news-admin-panel').hidden = !news;
+    $('media-upload-panel').hidden = news;
+    $('media-list-panel').hidden = news;
+    document.querySelectorAll('[data-admin-media]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.adminMedia === mediaType)));
+    if (news) { syncControls(); return; }
     const videos = mediaType === 'videos';
     $('upload-heading').textContent = videos ? 'Subir videos' : 'Subir fotografías';
     $('upload-kind').textContent = videos ? '02 / NUEVOS VIDEOS' : '01 / NUEVAS IMÁGENES';
@@ -340,7 +351,7 @@
     updateMediaMode();
     $('photo-list').replaceChildren();
     setBusy(true);
-    try { await refreshList(); notify('Sección de ' + mediaLabel() + '.'); }
+    try { await refreshList(); notify(mediaType === 'news' ? 'Sección de noticias.' : 'Sección de ' + mediaLabel() + '.'); }
     catch (error) { notify(error.message, 'error'); }
     finally { setBusy(false); }
   }));
