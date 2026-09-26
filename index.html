@@ -26,8 +26,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Staatliches&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=20260926-gallery-fit-2">
+  <link rel="stylesheet" href="news.css?v=1">
   <script src="script.js?v=20260926-gallery-fit-2" defer></script>
   <script src="gallery.js?v=20260926-gallery-fit-2" defer></script>
+  <script src="news.js?v=1" defer></script>
   <script src="analytics.js?v=1" defer></script>
   <script src="gallery-videos.js?v=20260926-gallery-fit-2" defer></script>
   <meta name="gallery-api-endpoint" content="https://mafia-tacna-api.acunanuncamas.workers.dev/api/gallery">
@@ -85,8 +87,18 @@
         <div class="gallery-videos-panel" id="gallery-videos-panel" role="tabpanel" aria-labelledby="gallery-videos-tab" hidden></div>
       </section>
 
+      <section class="news-view" id="news-view" aria-labelledby="news-heading" hidden>
+        <div class="gallery-heading-row news-heading-row">
+          <button class="gallery-back" id="news-back" type="button">← INICIO</button>
+          <p class="news-edition">ARCHIVO ABIERTO / EDICIÓN 001</p>
+        </div>
+        <h2 id="news-heading" tabindex="-1">NOTICIAS<span aria-hidden="true">.</span></h2>
+        <p class="news-demo">PORTADA DE PRUEBA · Noticias ficticias y enlaces de ejemplo.</p>
+        <div class="news-collage" id="news-collage"></div>
+      </section>
+
     <nav class="bottom-nav" aria-label="Navegación principal">
-      <a href="#"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M7 5h18v23H7zM11 10h10M11 14h10M17 19h4M17 23h4M11 19h3v4h-3z"/></svg><span>NOTICIAS</span></a>
+      <a href="#noticias" id="news-nav-link" aria-controls="news-view"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M7 5h18v23H7zM11 10h10M11 14h10M17 19h4M17 23h4M11 19h3v4h-3z"/></svg><span>NOTICIAS</span></a>
       <a href="#galeria" id="gallery-nav-link" aria-controls="gallery-view"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4 7h24v19H4zM4 23l8-8 6 6 4-4 6 6"/><circle cx="22" cy="12" r="2"/></svg><span class="nav-label">GALERÍA<br>DEL HORROR</span></a>
       <a href="#"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="16" cy="16" r="12"/><g fill="currentColor" stroke="none"><circle cx="10" cy="16" r="1.5"/><circle cx="16" cy="16" r="1.5"/><circle cx="22" cy="16" r="1.5"/></g></svg><span>MÁS</span></a>
     </nav>
