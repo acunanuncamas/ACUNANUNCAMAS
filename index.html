@@ -25,9 +25,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Staatliches&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260925-background-2">
+  <link rel="stylesheet" href="style.css?v=20260926-gallery-tabs-5">
   <script src="script.js?v=20260925-audio-visibility-2" defer></script>
-  <script src="gallery.js?v=20260925-gallery-rectangles-4" defer></script>
+  <script src="gallery.js?v=20260926-gallery-tabs-6" defer></script>
   <meta name="gallery-api-endpoint" content="https://mafia-tacna-api.acunanuncamas.workers.dev/api/gallery">
 </head>
 <body>
@@ -72,8 +72,15 @@
           <button class="gallery-back" id="gallery-back" type="button">← INICIO</button>
           <h2 id="gallery-heading">GALERÍA DEL HORROR</h2>
         </div>
-        <p class="gallery-status" id="gallery-status" role="status">CARGANDO GALERÍA...</p>
-        <div class="gallery-columns" id="gallery-columns" aria-label="Fotografías de la galería"></div>
+        <div class="gallery-tabs" role="tablist" aria-label="Contenido de la galería">
+          <button class="gallery-tab" id="gallery-photos-tab" type="button" role="tab" aria-selected="true" aria-controls="gallery-photos-panel">FOTOS</button>
+          <button class="gallery-tab" id="gallery-videos-tab" type="button" role="tab" aria-selected="false" aria-controls="gallery-videos-panel" tabindex="-1">VIDEOS</button>
+        </div>
+        <div id="gallery-photos-panel" role="tabpanel" aria-labelledby="gallery-photos-tab">
+          <p class="gallery-status" id="gallery-status" role="status">CARGANDO GALERÍA...</p>
+          <div class="gallery-columns" id="gallery-columns" aria-label="Fotografías de la galería"></div>
+        </div>
+        <div class="gallery-videos-panel" id="gallery-videos-panel" role="tabpanel" aria-labelledby="gallery-videos-tab" hidden></div>
       </section>
 
     <nav class="bottom-nav" aria-label="Navegación principal">

@@ -3,6 +3,9 @@
 const galleryView = document.querySelector('#gallery-view');
 const galleryColumns = document.querySelector('#gallery-columns');
 const galleryStatus = document.querySelector('#gallery-status');
+const galleryTabs = Array.from(document.querySelectorAll('.gallery-tab'));
+const galleryPhotosPanel = document.querySelector('#gallery-photos-panel');
+const galleryVideosPanel = document.querySelector('#gallery-videos-panel');
 const galleryNavLink = document.querySelector('#gallery-nav-link');
 const galleryBack = document.querySelector('#gallery-back');
 const galleryLightbox = document.querySelector('#gallery-lightbox');
@@ -64,6 +67,7 @@ async function loadGalleryPhotos() {
   }
   galleryStatus.hidden = false;
   galleryStatus.textContent = 'CARGANDO GALERÍA...';
+  galleryView.classList.add('is-loading');
   galleryLoadPromise = (async () => {
     try {
       const response = await fetch(galleryEndpoint, { cache: 'no-store' });
@@ -86,6 +90,7 @@ async function loadGalleryPhotos() {
       galleryStatus.hidden = false;
       galleryStatus.textContent = 'NO SE PUDO CARGAR LA GALERÍA';
     } finally {
+      galleryView.classList.remove('is-loading');
       galleryLoadPromise = null;
     }
   })();
@@ -166,7 +171,7 @@ function renderGalleryColumns() {
 
 function syncGalleryMotion() {
   galleryView.classList.toggle('is-running',
-    galleryActive && !galleryView.hidden && galleryColumns.classList.contains('is-entered') &&
+    galleryActive && !galleryView.hidden && !galleryPhotosPanel.hidden && galleryColumns.classList.contains('is-entered') &&
     !galleryReducedMotion.matches && document.visibilityState !== 'hidden');
 }
 
@@ -193,13 +198,14 @@ async function showGallery() {
   galleryActive = true;
   const poster = document.querySelector('#poster');
   poster.classList.add('view-switching', 'gallery-open');
+  galleryView.classList.add('is-loading');
   await waitForGalleryFade();
   galleryHomeParts.forEach((part) => { part.hidden = true; });
   galleryView.hidden = false;
   window.requestAnimationFrame(() => {
     galleryView.classList.add('is-visible');
     galleryView.scrollIntoView({
-      behavior: galleryReducedMotion.matches ? 'auto' : 'smooth',
+      behavior: 'instant',
       block: 'start'
     });
   });
@@ -261,6 +267,34 @@ function closeGalleryLightbox() {
   selectedGalleryColumn = null;
   if (galleryActive) galleryBack.focus({ preventScroll: true });
 }
+
+function selectGalleryTab(tab) {
+  if (!galleryTabs.includes(tab)) return;
+  closeGalleryLightbox();
+  const photosSelected = tab.id === 'gallery-photos-tab';
+  galleryPhotosPanel.hidden = !photosSelected;
+  galleryVideosPanel.hidden = photosSelected;
+  galleryTabs.forEach((item) => {
+    const selected = item === tab;
+    item.setAttribute('aria-selected', String(selected));
+    item.tabIndex = selected ? 0 : -1;
+  });
+  syncGalleryMotion();
+}
+galleryTabs.forEach((tab, index) => {
+  tab.addEventListener('click', () => selectGalleryTab(tab));
+  tab.addEventListener('keydown', (event) => {
+    let next;
+    if (event.key === 'ArrowRight') next = (index + 1) % galleryTabs.length;
+    else if (event.key === 'ArrowLeft') next = (index + galleryTabs.length - 1) % galleryTabs.length;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = galleryTabs.length - 1;
+    else return;
+    event.preventDefault();
+    selectGalleryTab(galleryTabs[next]);
+    galleryTabs[next].focus();
+  });
+});
 
 galleryNavLink.addEventListener('click', (event) => {
   event.preventDefault();
