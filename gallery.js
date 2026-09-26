@@ -36,10 +36,13 @@ function galleryColumnCount() {
 
 function normalizeGalleryPhoto(entry, index) {
   if (!entry || typeof entry !== 'object' ||
-      entry.active === false || entry.active === 0 || entry.active === 'false' ||
-      typeof entry.image_url !== 'string') return null;
+      entry.active === false || entry.active === 0 || entry.active === '0' || entry.active === 'false') return null;
+  const imagePath = typeof entry.image_url === 'string' && entry.image_url.trim()
+    ? entry.image_url.trim()
+    : entry.id != null ? '/api/gallery/image/' + encodeURIComponent(entry.id) : '';
+  if (!imagePath) return null;
   try {
-    const url = new URL(entry.image_url, window.location.href);
+    const url = new URL(imagePath, galleryEndpoint || window.location.href);
     if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
     return {
       id: entry.id ?? index,

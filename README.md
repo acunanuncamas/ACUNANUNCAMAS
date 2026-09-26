@@ -16,6 +16,6 @@ Abre `index.html` con Live Server en Visual Studio Code. También funciona abrie
 
 El contador se carga desde el Worker de Cloudflare. La URL normal registra el voto real con validación por IP; `?test=1` repite la animación y simula el aumento solo en la pestaña, sin enviar votos.
 
-El enlace GALERÍA DEL HORROR abre una vista en la misma página. Las fotos se obtendrán del endpoint de lectura configurado en `<meta name="gallery-api-endpoint">`; mientras no exista, la vista indica que la galería aún no está disponible. Para conectar R2, D1 y el futuro panel protegido, sigue `GALLERY_SETUP.md`.
+El enlace GALERÍA DEL HORROR abre una vista en la misma página y obtiene las fotos de la API real de Cloudflare configurada en `<meta name="gallery-api-endpoint">`. Para gestionar fotos, abre `admin-gallery.html` e introduce tu token. Las instrucciones de uso y los orígenes CORS están en `GALLERY_SETUP.md`.
 
 La intro usa WebM con MP4 como alternativa y permite continuar cuando termina el video. Con movimiento reducido se muestra directamente la opción para continuar. El código del Worker y la base D1 no forman parte de este repositorio.
